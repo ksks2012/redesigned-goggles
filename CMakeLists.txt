@@ -16,6 +16,7 @@ set(SOURCES
     src/Controller.cpp
     src/Game.cpp
     src/main.cpp
+    src/Event.cpp
 )
 
 # Create executable
