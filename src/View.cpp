@@ -29,6 +29,7 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
 
     renderButton("Add Card", 600, 50, 100, 40);
     renderButton("Remove Card", 600, 100, 100, 40);
+    renderButton("Explore", 600, 150, 100, 40);
 
     SDL_RenderPresent(renderer);
 }
@@ -43,7 +44,7 @@ void View::setRarityColor(int rarity) {
 }
 
 void View::renderText(const std::string& text, int x, int y, SDL_Color color) {
-    SDL_Surface* surface = TTF_RenderText_Solid(sdlManager.getFont(), text.c_str(), color);
+    SDL_Surface* surface = TTF_RenderUTF8_Solid(sdlManager.getFont(), text.c_str(), color);
     if (!surface) {
         std::cerr << "Text rendering failed: " << TTF_GetError() << std::endl;
         return;

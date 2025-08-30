@@ -1,7 +1,9 @@
 #pragma once
 #include <mutex>
+#include <random>
 #include "Inventory.h"
 #include "View.h"
+#include "Event.h"
 
 class Controller {
 public:
@@ -20,4 +22,5 @@ private:
     std::mutex mutex;
 
     void handleMouseDown(int x, int y);
+    void handleExplore(); // New method for exploration
 };
