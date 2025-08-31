@@ -39,6 +39,14 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     renderButton(Constants::BUTTON_TEXT_EXPLORE, Constants::BUTTON_X, Constants::BUTTON_Y_EXPLORE,
                  Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT);
 
+    // Display operation hints
+    int hintX = Constants::HINT_X;
+    int hintY = Constants::WINDOW_HEIGHT - Constants::HINT_BOTTOM_OFFSET;
+    renderText(Constants::HINT_TITLE, hintX, hintY, Constants::TEXT_COLOR);
+    renderText(Constants::HINT_SAVE, hintX, hintY + Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
+    renderText(Constants::HINT_LOAD, hintX, hintY + 2 * Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
+    renderText(Constants::HINT_EXIT, hintX, hintY + 3 * Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
+
     SDL_RenderPresent(renderer);
 }
 

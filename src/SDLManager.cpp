@@ -5,7 +5,7 @@ SDLManager::SDLManager() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
     }
-    window = SDL_CreateWindow("Endgame MVP", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Endgame MVP", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
         throw std::runtime_error("Window creation failed: " + std::string(SDL_GetError()));
     }

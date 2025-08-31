@@ -27,6 +27,9 @@ void Controller::handleEvents() {
                     selectedCard = nullptr;
                 }
                 break;
+            case SDL_KEYDOWN:
+                handleKeyDown(event.key.keysym.sym);
+                break;
         }
     }
 }
@@ -114,5 +117,47 @@ void Controller::handleExplore() {
             }
             break;
         }
+    }
+}
+
+void Controller::setSaveCallback(std::function<bool()> saveCallback) {
+    this->saveCallback = saveCallback;
+}
+
+void Controller::setLoadCallback(std::function<bool()> loadCallback) {
+    this->loadCallback = loadCallback;
+}
+
+void Controller::handleKeyDown(SDL_Keycode key) {
+    switch (key) {
+        case SDLK_s:
+            // Press S to save (simplified, not Ctrl+S)
+            if (saveCallback) {
+                if (saveCallback()) {
+                    std::cout << "Game saved manually!" << std::endl;
+                } else {
+                    std::cout << "Save failed!" << std::endl;
+                }
+            }
+            break;
+
+        case SDLK_l:
+            // Press L to load
+            if (loadCallback) {
+                if (loadCallback()) {
+                    std::cout << "Game loaded!" << std::endl;
+                } else {
+                    std::cout << "Load failed!" << std::endl;
+                }
+            }
+            break;
+
+        case SDLK_ESCAPE:
+            // ESC to exit game
+            running = false;
+            break;
+
+        default:
+            break;
     }
 }

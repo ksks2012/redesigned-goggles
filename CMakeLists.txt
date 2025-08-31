@@ -7,6 +7,7 @@ find_package(SDL2_ttf REQUIRED)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 # Source files
 set(SOURCES
@@ -15,6 +16,7 @@ set(SOURCES
     src/View.cpp
     src/Controller.cpp
     src/Game.cpp
+    src/SaveManager.cpp
     src/main.cpp
     src/Event.cpp
 )

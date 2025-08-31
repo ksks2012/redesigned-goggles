@@ -10,8 +10,8 @@ namespace Constants {
 // SDLManager
 constexpr const char* WINDOW_TITLE = "Endgame MVP";
 constexpr int WINDOW_POS = SDL_WINDOWPOS_CENTERED;
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 1080;
+constexpr int WINDOW_HEIGHT = 720;
 constexpr Uint32 WINDOW_FLAGS = SDL_WINDOW_SHOWN;
 constexpr Uint32 RENDERER_FLAGS = SDL_RENDERER_ACCELERATED;
 constexpr const char* FONT_PATH = "./assets/font.ttf";
@@ -79,4 +79,13 @@ inline const std::vector<Event> EXPLORATION_EVENTS = {
     Event("Found medical kit", {Card("Medicine", 2, 1)}, {}, 0.2f),
     Event("Found water source", {Card("Water", 1, 2)}, {}, 0.1f)
 };
+
+constexpr int HINT_X = 20;
+constexpr int HINT_BOTTOM_OFFSET = 120;
+constexpr int HINT_LINE_SPACING = 28;
+constexpr const char* HINT_TITLE = "Hints:";
+constexpr const char* HINT_SAVE = "S: Save progress";
+constexpr const char* HINT_LOAD = "L: Load progress";
+constexpr const char* HINT_EXIT = "ESC: Exit game";
+
 }
