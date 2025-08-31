@@ -48,15 +48,27 @@ constexpr int BUTTON_HEIGHT = 40;
 constexpr int BUTTON_Y_ADD = 50;
 constexpr int BUTTON_Y_REMOVE = 100;
 constexpr int BUTTON_Y_EXPLORE = 150;
+constexpr int BUTTON_Y_CRAFT = 200;
 constexpr const char* BUTTON_TEXT_ADD = "Add Card";
 constexpr const char* BUTTON_TEXT_REMOVE = "Remove Card";
 constexpr const char* BUTTON_TEXT_EXPLORE = "Explore";
+constexpr const char* BUTTON_TEXT_CRAFT = "Crafting";
+
+// Crafting UI
+constexpr int CRAFT_PANEL_X = 300;
+constexpr int CRAFT_PANEL_Y = 100;
+constexpr int CRAFT_PANEL_WIDTH = 450;
+constexpr int CRAFT_PANEL_HEIGHT = 400;
+constexpr int RECIPE_LIST_HEIGHT = 300;
+constexpr int RECIPE_ITEM_HEIGHT = 60;
+constexpr int RECIPE_SCROLL_SPEED = 3;
 
 // Controller: Hitboxes
 constexpr int BUTTON_MAX_X = BUTTON_X + BUTTON_MIN_WIDTH;
 constexpr int BUTTON_Y_ADD_END = BUTTON_Y_ADD + BUTTON_HEIGHT;
 constexpr int BUTTON_Y_REMOVE_END = BUTTON_Y_REMOVE + BUTTON_HEIGHT;
 constexpr int BUTTON_Y_EXPLORE_END = BUTTON_Y_EXPLORE + BUTTON_HEIGHT;
+constexpr int BUTTON_Y_CRAFT_END = BUTTON_Y_CRAFT + BUTTON_HEIGHT;
 constexpr int CARD_MAX_X = CARD_X + CARD_WIDTH;
 
 // Controller: Game logic
