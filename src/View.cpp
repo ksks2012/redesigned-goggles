@@ -59,8 +59,8 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     renderText(Constants::HINT_LOAD, hintX, hintY + 2 * Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
     renderText(Constants::HINT_EXIT, hintX, hintY + 3 * Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
 
-    // Detect mouse hover and show tooltip (only when not dragging a card)
-    if (!selectedCard) {
+    // Detect mouse hover and show tooltip (only when not dragging a card and crafting panel is not shown)
+    if (!selectedCard && !showCraftingPanel) {
         const Card* hoveredCard = getHoveredCard(inventory, mouseX, mouseY);
         if (hoveredCard) {
             renderTooltip(*hoveredCard, mouseX, mouseY);

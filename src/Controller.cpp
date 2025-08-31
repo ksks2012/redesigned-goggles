@@ -82,22 +82,30 @@ void Controller::handleMouseDown(int x, int y) {
         std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
         inventory.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
         } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_REMOVE && y <= Constants::BUTTON_Y_REMOVE_END) {
-        // Remove card button
-        auto& cards = inventory.getCards();
-        if (!cards.empty()) {
-            inventory.removeCard(cards[0].name, cards[0].rarity);
-        }
+            // Remove card button
+            auto& cards = inventory.getCards();
+            if (!cards.empty()) {
+                inventory.removeCard(cards[0].name, cards[0].rarity);
+            }
         } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_EXPLORE && y <= Constants::BUTTON_Y_EXPLORE_END) {
-        // Explore button
-        handleExplore();
+            // Explore button
+            handleExplore();
         } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_CRAFT && y <= Constants::BUTTON_Y_CRAFT_END) {
-        // Crafting button
-        showCraftingPanel = !showCraftingPanel;
-        std::cout << (showCraftingPanel ? "Crafting panel opened" : "Crafting panel closed") << std::endl;
+            // Crafting button
+            showCraftingPanel = !showCraftingPanel;
+            std::cout << (showCraftingPanel ? "Crafting panel opened" : "Crafting panel closed") << std::endl;
         } else if (showCraftingPanel) {
-        // Handle clicks inside crafting panel
-        handleCrafting();
-        return;
+            // Check if click is inside crafting panel area
+            if (x >= Constants::CRAFT_PANEL_X && x <= Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_WIDTH &&
+                y >= Constants::CRAFT_PANEL_Y && y <= Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT) {
+                // Handle clicks inside crafting panel
+                handleCrafting();
+            } else {
+                // Click outside crafting panel - close it
+                showCraftingPanel = false;
+                std::cout << "Crafting panel closed (click outside)" << std::endl;
+            }
+            return;
         }
 
         // Card selection logic (only when crafting panel is not shown)
@@ -176,8 +184,13 @@ void Controller::handleKeyDown(SDL_Keycode key) {
             break;
 
         case SDLK_ESCAPE:
-            // ESC to exit game
-            running = false;
+            // ESC to close crafting panel or exit game
+            if (showCraftingPanel) {
+                showCraftingPanel = false;
+                std::cout << "Crafting panel closed (ESC)" << std::endl;
+            } else {
+                running = false;
+            }
             break;
 
         default:
@@ -186,23 +199,27 @@ void Controller::handleKeyDown(SDL_Keycode key) {
 }
 
 void Controller::handleCrafting() {
-    // Simplified crafting panel click handling
-    // Only handles recipe selection here; actual UI click detection is handled in View
+    // Get all recipes (matching what View displays)
+    auto allRecipes = craftingSystem.getAllRecipes();
 
-    // Get available recipes
-    auto availableRecipes = craftingSystem.getAvailableRecipes(inventory);
-
-    if (availableRecipes.empty()) {
-        std::cout << "No available crafting recipes" << std::endl;
+    if (allRecipes.empty()) {
+        std::cout << "No crafting recipes available" << std::endl;
         return;
     }
 
-    // Simple recipe selection logic (can be extended to more complex UI later)
-    // Uses mouse position to select recipe
-    int recipeIndex = (mouseY - Constants::CRAFT_PANEL_Y - Constants::CRAFT_PANEL_RECIPE_LIST_OFFSET) / Constants::RECIPE_ITEM_HEIGHT;
+    // Calculate which recipe was clicked based on mouse position
+    int recipesStartY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
+    int recipeIndex = (mouseY - recipesStartY) / Constants::RECIPE_ITEM_HEIGHT;
 
-    if (recipeIndex >= 0 && recipeIndex < static_cast<int>(availableRecipes.size())) {
-        craftSelectedRecipe(availableRecipes[recipeIndex]);
+    if (recipeIndex >= 0 && recipeIndex < static_cast<int>(allRecipes.size())) {
+        const Recipe& selectedRecipe = allRecipes[recipeIndex];
+        
+        // Only try to craft if the recipe is unlocked and player has materials
+        if (craftingSystem.canCraft(selectedRecipe, inventory)) {
+            craftSelectedRecipe(selectedRecipe);
+        } else {
+            std::cout << "Cannot craft " << selectedRecipe.name << " - insufficient materials or recipe not unlocked" << std::endl;
+        }
     }
 }
 
