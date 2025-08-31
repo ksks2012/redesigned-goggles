@@ -20,6 +20,11 @@ set(SOURCES
     src/CraftingSystem.cpp
     src/main.cpp
     src/Event.cpp
+    src/ui/UIComponent.cpp
+    src/ui/UIButton.cpp
+    src/ui/UICard.cpp
+    src/ui/UITooltip.cpp
+    src/ui/UICraftingPanel.cpp
 )
 
 # Create executable
