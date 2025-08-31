@@ -263,7 +263,7 @@ inline const std::vector<Event> EXPLORATION_EVENTS = {
 };
 
 // Tooltip and hints
-constexpr int HINT_X = 20;
+constexpr int HINT_X = WINDOW_WIDTH - 300;
 constexpr int HINT_BOTTOM_OFFSET = 120;
 constexpr int HINT_LINE_SPACING = 28;
 constexpr const char* HINT_TITLE = "Hints:";
