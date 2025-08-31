@@ -122,6 +122,14 @@ nlohmann::json SaveManager::cardToJson(const Card& card) const {
     cardJson["name"] = card.name;
     cardJson["rarity"] = card.rarity;
     cardJson["quantity"] = card.quantity;
+    cardJson["type"] = static_cast<int>(card.type);
+    
+    // Serialize attributes
+    cardJson["attributes"] = nlohmann::json::object();
+    for (const auto& attr : card.attributes) {
+        cardJson["attributes"][std::to_string(static_cast<int>(attr.first))] = attr.second;
+    }
+    
     return cardJson;
 }
 
@@ -142,7 +150,24 @@ Card SaveManager::jsonToCard(const nlohmann::json& cardJson) const {
     int rarity = cardJson["rarity"];
     int quantity = cardJson["quantity"];
     
-    return Card(name, rarity, quantity);
+    // Handle type (backward compatibility)
+    CardType type = CardType::MISC;
+    if (cardJson.contains("type")) {
+        type = static_cast<CardType>(cardJson["type"]);
+    }
+    
+    Card card(name, rarity, type, quantity);
+
+    // Load attributes (backward compatibility)
+    if (cardJson.contains("attributes") && cardJson["attributes"].is_object()) {
+        for (const auto& attr : cardJson["attributes"].items()) {
+            AttributeType attrType = static_cast<AttributeType>(std::stoi(attr.key()));
+            float value = attr.value();
+            card.setAttribute(attrType, value);
+        }
+    }
+    
+    return card;
 }
 
 void SaveManager::jsonToInventory(const nlohmann::json& json, Inventory& inventory) const {

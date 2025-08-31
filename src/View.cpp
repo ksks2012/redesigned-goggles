@@ -16,20 +16,38 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
         SDL_Rect rect = {Constants::CARD_X, cardY, Constants::CARD_WIDTH, Constants::CARD_HEIGHT};
         setRarityColor(card.rarity);
         SDL_RenderFillRect(renderer, &rect);
-        std::string text = card.name + " x" + std::to_string(card.quantity);
-        renderText(text, Constants::CARD_X + Constants::CARD_TEXT_OFFSET_X, cardY + Constants::CARD_TEXT_OFFSET_Y,
-                   Constants::TEXT_COLOR);
-        index++;
-    }
+        
+        // Display card name, quantity, and type
+        std::string mainText = card.name + " x" + std::to_string(card.quantity) + " (" + card.getTypeString() + ")";
+        renderText(mainText, Constants::CARD_X + Constants::CARD_TEXT_OFFSET_X, cardY + Constants::CARD_TEXT_OFFSET_Y - 5,
+               Constants::TEXT_COLOR);
 
-    if (selectedCard) {
+        // Display main attribute
+        std::string attributeText = getCardAttributeText(card);
+        if (!attributeText.empty()) {
+            renderText(attributeText, Constants::CARD_X + Constants::CARD_TEXT_OFFSET_X, cardY + Constants::CARD_TEXT_OFFSET_Y + 15,
+                   Constants::ATTRIBUTE_TEXT_COLOR); // Use color from Constants
+        }
+
+        index++;
+        }
+
+        if (selectedCard) {
         SDL_Rect dragRect = {mouseX + Constants::DRAG_CARD_OFFSET_X, mouseY + Constants::DRAG_CARD_OFFSET_Y,
-                             Constants::CARD_WIDTH, Constants::CARD_HEIGHT};
+                     Constants::CARD_WIDTH, Constants::CARD_HEIGHT};
         setRarityColor(selectedCard->rarity);
         SDL_RenderFillRect(renderer, &dragRect);
-        std::string text = selectedCard->name + " x" + std::to_string(selectedCard->quantity);
-        renderText(text, mouseX + Constants::DRAG_TEXT_OFFSET_X, mouseY + Constants::DRAG_TEXT_OFFSET_Y,
+
+        // Display detailed info for dragged card
+        std::string mainText = selectedCard->name + " x" + std::to_string(selectedCard->quantity) + " (" + selectedCard->getTypeString() + ")";
+        renderText(mainText, mouseX + Constants::DRAG_TEXT_OFFSET_X, mouseY + Constants::DRAG_TEXT_OFFSET_Y - 5,
                    Constants::TEXT_COLOR);
+        
+        std::string attributeText = getCardAttributeText(*selectedCard);
+        if (!attributeText.empty()) {
+            renderText(attributeText, mouseX + Constants::DRAG_TEXT_OFFSET_X, mouseY + Constants::DRAG_TEXT_OFFSET_Y + 15,
+                       Constants::ATTRIBUTE_TEXT_COLOR);
+        }
     }
 
     renderButton(Constants::BUTTON_TEXT_ADD, Constants::BUTTON_X, Constants::BUTTON_Y_ADD,
@@ -94,4 +112,71 @@ void View::renderButton(const std::string& text, int x, int y, int minW, int h) 
     int textX = x + (buttonW - textW) / 2;
     int textY = y + (h - textH) / 2;
     renderText(text, textX, textY, Constants::TEXT_COLOR);
+}
+
+std::string View::getCardAttributeText(const Card& card) {
+    std::string attributeText = "";
+
+    // Display the most important attribute based on card type
+    switch (card.type) {
+        case CardType::FOOD:
+            if (card.hasAttribute(AttributeType::NUTRITION)) {
+                attributeText += "Nutrition: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::NUTRITION)));
+            }
+            break;
+
+        case CardType::WEAPON:
+            if (card.hasAttribute(AttributeType::ATTACK)) {
+                attributeText += "Attack: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::ATTACK)));
+            }
+            if (card.hasAttribute(AttributeType::DURABILITY)) {
+                if (!attributeText.empty()) attributeText += " ";
+                attributeText += "Durability: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::DURABILITY)));
+            }
+            break;
+
+        case CardType::ARMOR:
+            if (card.hasAttribute(AttributeType::DEFENSE)) {
+                attributeText += "Defense: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::DEFENSE)));
+            }
+            if (card.hasAttribute(AttributeType::DURABILITY)) {
+                if (!attributeText.empty()) attributeText += " ";
+                attributeText += "Durability: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::DURABILITY)));
+            }
+            break;
+
+        case CardType::HERB:
+            if (card.hasAttribute(AttributeType::HEALING)) {
+                attributeText += "Healing: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::HEALING)));
+            }
+            break;
+
+        case CardType::FUEL:
+            if (card.hasAttribute(AttributeType::BURN_VALUE)) {
+                attributeText += "Burn Value: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::BURN_VALUE)));
+            }
+            break;
+
+        case CardType::METAL:
+        case CardType::BUILDING:
+            if (card.hasAttribute(AttributeType::CRAFTING_VALUE)) {
+                attributeText += "Crafting Value: " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::CRAFTING_VALUE)));
+            }
+            break;
+
+        default:
+            // For other types, display weight or trade value
+            if (card.hasAttribute(AttributeType::WEIGHT)) {
+                attributeText += "Weight: " + std::to_string(card.getAttribute(AttributeType::WEIGHT));
+            }
+            break;
+    }
+
+    // Always display total weight (if weight attribute exists)
+    if (card.hasAttribute(AttributeType::WEIGHT) && card.quantity > 1) {
+        if (!attributeText.empty()) attributeText += " ";
+        attributeText += "Total Weight: " + std::to_string(card.getTotalWeight());
+    }
+
+    return attributeText;
 }

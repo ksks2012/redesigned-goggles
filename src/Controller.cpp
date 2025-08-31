@@ -64,7 +64,10 @@ void Controller::organizeInventory() {
                 if (!merged) newCards.push_back(card);
             }
             inventory.updateCards(newCards);
-            inventory.addCard(Card(Constants::CARD_NAMES[nameDist(gen)], rarityDist(gen)));
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
+            inventory.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
         }
         std::this_thread::sleep_for(Constants::ORGANIZE_INTERVAL);
     }
@@ -75,8 +78,7 @@ void Controller::handleMouseDown(int x, int y) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
-        std::uniform_int_distribution<> nameDist(0, Constants::CARD_NAMES.size() - 1);
-        inventory.addCard(Card(Constants::CARD_NAMES[nameDist(gen)], rarityDist(gen)));
+        inventory.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
     } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_REMOVE && y <= Constants::BUTTON_Y_REMOVE_END) {
         auto& cards = inventory.getCards();
         if (!cards.empty()) {

@@ -16,4 +16,5 @@ private:
     void setRarityColor(int rarity);
     void renderText(const std::string& text, int x, int y, SDL_Color color);
     void renderButton(const std::string& text, int x, int y, int minW, int h);
+    std::string getCardAttributeText(const Card& card);
 };
