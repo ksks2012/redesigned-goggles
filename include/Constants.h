@@ -28,6 +28,18 @@ constexpr SDL_Color RARITY_LEGENDARY = {255, 215, 0, 255};
 constexpr SDL_Color ATTRIBUTE_TEXT_COLOR = {200, 200, 200, 255}; // Light gray for attributes
 constexpr SDL_Color TOOLTIP_BG_COLOR = {30, 30, 30, 230}; // Dark gray with some transparency
 
+// View: UI Colors
+constexpr SDL_Color OVERLAY_COLOR = {0, 0, 0, 128}; // Semi-transparent black overlay
+constexpr SDL_Color PANEL_BG_COLOR = {40, 40, 40, 255}; // Dark gray panel background
+constexpr SDL_Color BORDER_COLOR = {100, 100, 100, 255}; // Gray border
+constexpr SDL_Color SECONDARY_TEXT_COLOR = {180, 180, 180, 255}; // Light gray text
+
+// Recipe Item Colors
+constexpr SDL_Color RECIPE_CAN_CRAFT_BG = {20, 60, 20, 255}; // Green background for craftable items
+constexpr SDL_Color RECIPE_CANNOT_CRAFT_BG = {60, 20, 20, 255}; // Red background for non-craftable items
+constexpr SDL_Color RECIPE_LOCKED_BG = {30, 30, 30, 255}; // Dark gray for locked recipes
+constexpr SDL_Color RECIPE_DISABLED_TEXT = {150, 150, 150, 255}; // Gray text for disabled items
+
 
 // View: Card rendering
 constexpr int CARD_X = 50;
@@ -62,6 +74,37 @@ constexpr int CRAFT_PANEL_HEIGHT = 400;
 constexpr int RECIPE_LIST_HEIGHT = 300;
 constexpr int RECIPE_ITEM_HEIGHT = 60;
 constexpr int RECIPE_SCROLL_SPEED = 3;
+
+// Crafting Panel Layout
+constexpr int CRAFT_PANEL_PADDING = 20;
+constexpr int CRAFT_TITLE_OFFSET_Y = 20;
+constexpr int CRAFT_CLOSE_HINT_OFFSET_Y = 45;
+constexpr int CRAFT_RECIPE_LIST_START_Y = 80;
+constexpr int CRAFT_RECIPE_MARGIN = 10;
+constexpr int CRAFT_RECIPE_SPACING = 5;
+constexpr int CRAFT_INGREDIENT_OFFSET_X = 250;
+constexpr int CRAFT_RESULT_OFFSET_Y = 35;
+constexpr int CRAFT_SUCCESS_RATE_OFFSET_Y = 25;
+
+// Tooltip Layout
+constexpr int TOOLTIP_LINE_HEIGHT = 30;
+constexpr int TOOLTIP_PADDING = 10;
+constexpr int TOOLTIP_MOUSE_OFFSET = 15;
+constexpr int TOOLTIP_SCREEN_MARGIN = 10;
+
+// Button Layout
+constexpr int BUTTON_TEXT_PADDING = 10;
+
+// Crafting Panel Layout
+constexpr int CRAFT_PANEL_TITLE_OFFSET_X = 20;
+constexpr int CRAFT_PANEL_TITLE_OFFSET_Y = 20;
+constexpr int CRAFT_PANEL_HINT_OFFSET_Y = 45;
+constexpr int CRAFT_PANEL_RECIPES_START_Y = 80;
+constexpr int CRAFT_PANEL_MARGIN = 10;
+constexpr int CRAFT_PANEL_BOTTOM_MARGIN = 20;
+constexpr int CRAFT_PANEL_RECIPE_LIST_OFFSET = 50; // Offset for calculating recipe selection
+constexpr int RECIPE_ITEM_MARGIN = 20; // Space to leave on right side of recipe items
+constexpr int RECIPE_ITEM_VERTICAL_SPACING = 5; // Vertical spacing between recipe items
 
 // Controller: Hitboxes
 constexpr int BUTTON_MAX_X = BUTTON_X + BUTTON_MIN_WIDTH;

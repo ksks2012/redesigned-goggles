@@ -106,7 +106,7 @@ void View::renderButton(const std::string& text, int x, int y, int minW, int h) 
     SDL_Renderer* renderer = sdlManager.getRenderer();
     int textW, textH;
     TTF_SizeUTF8(sdlManager.getFont(), text.c_str(), &textW, &textH);
-    int buttonW = std::max(minW, textW + 10);
+    int buttonW = std::max(minW, textW + Constants::BUTTON_TEXT_PADDING);
     SDL_Rect rect = {x, y, buttonW, h};
     SDL_SetRenderDrawColor(renderer, Constants::BUTTON_COLOR.r, Constants::BUTTON_COLOR.g,
                            Constants::BUTTON_COLOR.b, Constants::BUTTON_COLOR.a);
@@ -204,8 +204,6 @@ void View::renderTooltip(const Card& card, int mouseX, int mouseY) {
 
     // Calculate tooltip window size
     int maxWidth = 0;
-    int lineHeight = 20;
-    int padding = 10;
     
     for (const auto& line : tooltipLines) {
         int textW, textH;
@@ -213,21 +211,21 @@ void View::renderTooltip(const Card& card, int mouseX, int mouseY) {
         maxWidth = std::max(maxWidth, textW);
     }
     
-    int tooltipWidth = maxWidth + 2 * padding;
-    int tooltipHeight = tooltipLines.size() * lineHeight + 2 * padding;
+    int tooltipWidth = maxWidth + 2 * Constants::TOOLTIP_PADDING;
+    int tooltipHeight = tooltipLines.size() * Constants::TOOLTIP_LINE_HEIGHT + 2 * Constants::TOOLTIP_PADDING;
     
     // Adjust tooltip position to avoid going off screen edges
-    int tooltipX = mouseX + 15; // Slight offset to avoid being covered by the mouse
+    int tooltipX = mouseX + Constants::TOOLTIP_MOUSE_OFFSET; // Slight offset to avoid being covered by the mouse
     int tooltipY = mouseY - tooltipHeight / 2;
     
     if (tooltipX + tooltipWidth > Constants::WINDOW_WIDTH) {
-        tooltipX = mouseX - tooltipWidth - 15;
+        tooltipX = mouseX - tooltipWidth - Constants::TOOLTIP_MOUSE_OFFSET;
     }
     if (tooltipY < 0) {
-        tooltipY = 10;
+        tooltipY = Constants::TOOLTIP_SCREEN_MARGIN;
     }
     if (tooltipY + tooltipHeight > Constants::WINDOW_HEIGHT) {
-        tooltipY = Constants::WINDOW_HEIGHT - tooltipHeight - 10;
+        tooltipY = Constants::WINDOW_HEIGHT - tooltipHeight - Constants::TOOLTIP_SCREEN_MARGIN;
     }
     
     // Render tooltip background
@@ -236,7 +234,8 @@ void View::renderTooltip(const Card& card, int mouseX, int mouseY) {
     // Render text
     for (size_t i = 0; i < tooltipLines.size(); ++i) {
         SDL_Color textColor = (i == 0) ? Constants::TEXT_COLOR : Constants::ATTRIBUTE_TEXT_COLOR;
-        renderText(tooltipLines[i], tooltipX + padding, tooltipY + padding + i * lineHeight, textColor);
+        renderText(tooltipLines[i], tooltipX + Constants::TOOLTIP_PADDING, 
+                   tooltipY + Constants::TOOLTIP_PADDING + i * Constants::TOOLTIP_LINE_HEIGHT, textColor);
     }
 }
 
@@ -323,25 +322,31 @@ void View::renderCraftingPanel(const CraftingSystem& craftingSystem, const Inven
     
     // Render semi-transparent background overlay
     SDL_Rect overlay = {0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT};
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+    SDL_SetRenderDrawColor(renderer, Constants::OVERLAY_COLOR.r, Constants::OVERLAY_COLOR.g, 
+                           Constants::OVERLAY_COLOR.b, Constants::OVERLAY_COLOR.a);
     SDL_RenderFillRect(renderer, &overlay);
     
     // Render crafting panel background
     SDL_Rect panelRect = {Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y, 
                           Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT};
-    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
+    SDL_SetRenderDrawColor(renderer, Constants::PANEL_BG_COLOR.r, Constants::PANEL_BG_COLOR.g, 
+                           Constants::PANEL_BG_COLOR.b, Constants::PANEL_BG_COLOR.a);
     SDL_RenderFillRect(renderer, &panelRect);
     
     // Render border
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_SetRenderDrawColor(renderer, Constants::BORDER_COLOR.r, Constants::BORDER_COLOR.g, 
+                           Constants::BORDER_COLOR.b, Constants::BORDER_COLOR.a);
     SDL_RenderDrawRect(renderer, &panelRect);
     
     // Title
-    renderText("Crafting System", Constants::CRAFT_PANEL_X + 20, Constants::CRAFT_PANEL_Y + 20, Constants::TEXT_COLOR);
+    renderText("Crafting System", Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_TITLE_OFFSET_X, 
+               Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_TITLE_OFFSET_Y, Constants::TEXT_COLOR);
     
     // Close hint
-    renderText("Press C or click blank area to close", Constants::CRAFT_PANEL_X + 20, Constants::CRAFT_PANEL_Y + 45, 
-               {180, 180, 180, 255});
+    renderText("Press C or click blank area to close", 
+               Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_TITLE_OFFSET_X, 
+               Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HINT_OFFSET_Y, 
+               Constants::SECONDARY_TEXT_COLOR);
     
     // Get all recipes and render
     auto allRecipes = craftingSystem.getAllRecipes();
@@ -349,7 +354,7 @@ void View::renderCraftingPanel(const CraftingSystem& craftingSystem, const Inven
 }
 
 void View::renderRecipeList(const std::vector<Recipe>& recipes, const Inventory& inventory) {
-    int startY = Constants::CRAFT_PANEL_Y + 80;
+    int startY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
     int currentY = startY;
     
     for (size_t i = 0; i < recipes.size(); ++i) {
@@ -380,11 +385,11 @@ void View::renderRecipeList(const std::vector<Recipe>& recipes, const Inventory&
             }
         }
         
-        renderRecipeItem(recipe, Constants::CRAFT_PANEL_X + 10, currentY, canCraft);
+        renderRecipeItem(recipe, Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_MARGIN, currentY, canCraft);
         currentY += Constants::RECIPE_ITEM_HEIGHT;
         
         // Prevent exceeding panel range
-        if (currentY + Constants::RECIPE_ITEM_HEIGHT > Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT - 20) {
+        if (currentY + Constants::RECIPE_ITEM_HEIGHT > Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT - Constants::CRAFT_PANEL_BOTTOM_MARGIN) {
             break;
         }
     }
@@ -394,37 +399,40 @@ void View::renderRecipeItem(const Recipe& recipe, int x, int y, bool canCraft) {
     SDL_Renderer* renderer = sdlManager.getRenderer();
     
     // Background color changes depending on whether crafting is possible
-    SDL_Color bgColor = canCraft ? SDL_Color{20, 60, 20, 255} : SDL_Color{60, 20, 20, 255};
+    SDL_Color bgColor = canCraft ? Constants::RECIPE_CAN_CRAFT_BG : Constants::RECIPE_CANNOT_CRAFT_BG;
     if (!recipe.isUnlocked) {
-        bgColor = {30, 30, 30, 255};
+        bgColor = Constants::RECIPE_LOCKED_BG;
     }
     
-    SDL_Rect itemRect = {x, y, Constants::CRAFT_PANEL_WIDTH - 20, Constants::RECIPE_ITEM_HEIGHT - 5};
+    SDL_Rect itemRect = {x, y, Constants::CRAFT_PANEL_WIDTH - Constants::RECIPE_ITEM_MARGIN, 
+                         Constants::RECIPE_ITEM_HEIGHT - Constants::RECIPE_ITEM_VERTICAL_SPACING};
     SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
     SDL_RenderFillRect(renderer, &itemRect);
     
     // Border
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_SetRenderDrawColor(renderer, Constants::BORDER_COLOR.r, Constants::BORDER_COLOR.g, 
+                           Constants::BORDER_COLOR.b, Constants::BORDER_COLOR.a);
     SDL_RenderDrawRect(renderer, &itemRect);
     
     // Recipe name
-    SDL_Color textColor = canCraft ? Constants::TEXT_COLOR : SDL_Color{150, 150, 150, 255};
+    SDL_Color textColor = canCraft ? Constants::TEXT_COLOR : Constants::RECIPE_DISABLED_TEXT;
     if (!recipe.isUnlocked) {
-        textColor = {100, 100, 100, 255};
-        renderText("??? (Locked)", x + 10, y + 5, textColor);
+        textColor = Constants::BORDER_COLOR;
+        renderText("??? (Locked)", x + Constants::CRAFT_PANEL_MARGIN, y + 5, textColor);
     } else {
-        renderText(recipe.name, x + 10, y + 5, textColor);
+        renderText(recipe.name, x + Constants::CRAFT_PANEL_MARGIN, y + 5, textColor);
         
         // Success rate
         std::string successText = "Success Rate: " + std::to_string(static_cast<int>(recipe.successRate * 100)) + "%";
-        renderText(successText, x + 10, y + 25, {200, 200, 200, 255});
+        renderText(successText, x + Constants::CRAFT_PANEL_MARGIN, y + Constants::CRAFT_SUCCESS_RATE_OFFSET_Y, 
+                   Constants::ATTRIBUTE_TEXT_COLOR);
         
         // Ingredient requirements
-        renderIngredientsList(recipe, x + 250, y + 5);
+        renderIngredientsList(recipe, x + Constants::CRAFT_INGREDIENT_OFFSET_X, y + 5);
         
         // Result
         std::string resultText = "→ " + recipe.result.name;
-        renderText(resultText, x + 250, y + 35, textColor);
+        renderText(resultText, x + Constants::CRAFT_INGREDIENT_OFFSET_X, y + Constants::CRAFT_RESULT_OFFSET_Y, textColor);
     }
 }
 
@@ -440,5 +448,5 @@ void View::renderIngredientsList(const Recipe& recipe, int x, int y) {
         }
     }
     
-    renderText(ingredientsText, x, y, {180, 180, 180, 255});
+    renderText(ingredientsText, x, y, Constants::SECONDARY_TEXT_COLOR);
 }

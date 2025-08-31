@@ -199,7 +199,7 @@ void Controller::handleCrafting() {
 
     // Simple recipe selection logic (can be extended to more complex UI later)
     // Uses mouse position to select recipe
-    int recipeIndex = (mouseY - Constants::CRAFT_PANEL_Y - 50) / Constants::RECIPE_ITEM_HEIGHT;
+    int recipeIndex = (mouseY - Constants::CRAFT_PANEL_Y - Constants::CRAFT_PANEL_RECIPE_LIST_OFFSET) / Constants::RECIPE_ITEM_HEIGHT;
 
     if (recipeIndex >= 0 && recipeIndex < static_cast<int>(availableRecipes.size())) {
         craftSelectedRecipe(availableRecipes[recipeIndex]);
