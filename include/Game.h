@@ -5,6 +5,9 @@
 #include "Controller.h"
 #include "SaveManager.h"
 #include "CraftingSystem.h"
+#include "ImGuiManager.h"
+#include "editor/GameEditor.h"
+#include <memory>
 
 class Game {
 public:
@@ -22,5 +25,11 @@ private:
     Controller controller;
     SaveManager saveManager;
     
+    // Editor system
+    ImGuiManager imguiManager;
+    std::unique_ptr<GameEditor> gameEditor;
+    
     void initializeDefaultGame();
+    void initializeEditor();
+    void handleEditorInput(SDL_Event& event);
 };

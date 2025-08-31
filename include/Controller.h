@@ -11,6 +11,7 @@ class Controller {
 public:
     Controller(Inventory& inv, View& v, CraftingSystem& crafting);
     void handleEvents();
+    void handleEvent(SDL_Event& event); // Handle individual event
     bool isRunning() const;
     void updateView();
     void organizeInventory();

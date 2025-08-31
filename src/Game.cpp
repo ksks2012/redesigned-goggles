@@ -8,6 +8,9 @@ Game::Game() : sdlManager(), inventory(), craftingSystem(), view(sdlManager), co
     controller.setSaveCallback([this]() { return this->saveGame(); });
     controller.setLoadCallback([this]() { return this->loadGame(); });
     
+    // Initialize editor system
+    initializeEditor();
+    
     // Try to load the save file; if it fails, initialize the default game
     if (!loadGame()) {
         std::cout << "Save file not found, starting a new game" << std::endl;
@@ -18,8 +21,30 @@ Game::Game() : sdlManager(), inventory(), craftingSystem(), view(sdlManager), co
 void Game::run() {
     std::thread organizer([this]() { controller.organizeInventory(); });
     while (controller.isRunning()) {
-        controller.handleEvents();
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            // Handle editor input first
+            if (imguiManager.handleEvent(&event)) {
+                continue; // Editor consumed the event
+            }
+            
+            // Handle game input
+            controller.handleEvent(event);
+        }
+        
+        // Update editor
+        if (imguiManager.isEditorMode()) {
+            imguiManager.beginFrame(sdlManager.getWindow());
+            gameEditor->update();
+            gameEditor->render();
+            imguiManager.endFrame();
+        }
+        
         controller.updateView();
+        
+        // Render ImGui overlay
+        imguiManager.render();
+        
         SDL_Delay(Constants::FRAME_DELAY_MS);
     }
     
@@ -42,4 +67,18 @@ void Game::initializeDefaultGame() {
     for (const auto& card : Constants::INITIAL_CARDS) {
         inventory.addCard(card);
     }
+}
+
+void Game::initializeEditor() {
+    if (imguiManager.initialize(sdlManager.getWindow(), sdlManager.getRenderer())) {
+        gameEditor = std::make_unique<GameEditor>();
+        gameEditor->initialize(imguiManager);
+        std::cout << "Editor system initialized. Press F1 to toggle editor mode." << std::endl;
+    } else {
+        std::cout << "Failed to initialize editor system" << std::endl;
+    }
+}
+
+// TODO: Implement detailed editor input handling if needed
+void Game::handleEditorInput(SDL_Event& event) {
 }

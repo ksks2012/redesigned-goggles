@@ -25,6 +25,10 @@ set(SOURCES
     src/ui/UICard.cpp
     src/ui/UITooltip.cpp
     src/ui/UICraftingPanel.cpp
+    src/ImGuiManager.cpp
+    src/editor/GameData.cpp
+    src/editor/GameEditor.cpp
+    src/editor/ConsoleEditor.cpp
 )
 
 # Create executable
