@@ -18,6 +18,10 @@ public:
     
     void setSaveCallback(std::function<bool()> saveCallback);
     void setLoadCallback(std::function<bool()> loadCallback);
+    
+    // Editor mode control for organizeInventory
+    void pauseOrganizeInventory();
+    void resumeOrganizeInventory();
 
 private:
     Inventory& inventory;
@@ -27,6 +31,7 @@ private:
     int mouseX = 0, mouseY = 0;
     bool running;
     bool showCraftingPanel = false;
+    bool organizeInventoryEnabled = true; // Control flag for organizeInventory
     std::mutex mutex;
     
     // Save/load callback functions

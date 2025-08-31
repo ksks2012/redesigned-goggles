@@ -49,6 +49,11 @@ bool ImGuiManager::handleEvent(SDL_Event* event) {
             editorMode_ = !editorMode_;
             std::cout << "Editor mode " << (editorMode_ ? "enabled" : "disabled") << std::endl;
             
+            // Notify callback about editor mode change
+            if (editorModeCallback_) {
+                editorModeCallback_(editorMode_);
+            }
+            
             // Start console editor when entering editor mode
             if (editorMode_ && !consoleEditorActive_ && dataManager_) {
                 startConsoleEditor();

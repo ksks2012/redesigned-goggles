@@ -44,6 +44,10 @@ public:
     
     // Console editor integration
     void setDataManager(GameDataManager* dataManager);
+    
+    // Editor mode change callback
+    using EditorModeCallback = std::function<void(bool)>;
+    void setEditorModeCallback(EditorModeCallback callback) { editorModeCallback_ = callback; }
 
 private:
     bool initialized_;
@@ -54,6 +58,9 @@ private:
     GameDataManager* dataManager_;
     std::unique_ptr<ConsoleEditor> consoleEditor_;
     bool consoleEditorActive_;
+    
+    // Editor mode change callback
+    EditorModeCallback editorModeCallback_;
     
     void setupStyle();
     void setupFonts();

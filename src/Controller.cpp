@@ -54,7 +54,8 @@ void Controller::organizeInventory() {
     std::uniform_int_distribution<> nameDist(0, Constants::CARD_NAMES.size() - 1);
 
     while (running) {
-        {
+        // Check if organizeInventory is enabled before processing
+        if (organizeInventoryEnabled) {
             std::lock_guard<std::mutex> lock(mutex);
             std::vector<Card> newCards;
             for (const auto& card : inventory.getCards()) {
@@ -244,4 +245,16 @@ void Controller::craftSelectedRecipe(const Recipe& recipe) {
     } else {
         std::cout << "Crafting failed: " << result.message << std::endl;
     }
+}
+
+void Controller::pauseOrganizeInventory() {
+    std::lock_guard<std::mutex> lock(mutex);
+    organizeInventoryEnabled = false;
+    std::cout << "Inventory organization paused for editor mode" << std::endl;
+}
+
+void Controller::resumeOrganizeInventory() {
+    std::lock_guard<std::mutex> lock(mutex);
+    organizeInventoryEnabled = true;
+    std::cout << "Inventory organization resumed" << std::endl;
 }

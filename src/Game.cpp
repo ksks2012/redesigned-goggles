@@ -77,6 +77,15 @@ void Game::initializeEditor() {
         // Provide data manager to ImGuiManager
         imguiManager.setDataManager(dataManager.get());
         
+        // Set callback for editor mode changes to control organizeInventory
+        imguiManager.setEditorModeCallback([this](bool editorMode) {
+            if (editorMode) {
+                controller.pauseOrganizeInventory();
+            } else {
+                controller.resumeOrganizeInventory();
+            }
+        });
+        
         gameEditor = std::make_unique<GameEditor>();
         gameEditor->initialize(imguiManager);
         std::cout << "Editor system initialized. Press F1 to toggle editor mode." << std::endl;
