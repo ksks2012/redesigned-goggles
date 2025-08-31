@@ -5,7 +5,8 @@
 
 View::View(SDLManager& sdl) : sdlManager(sdl) {}
 
-void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY) {
+void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
+                  bool showCraftingPanel, const CraftingSystem& craftingSystem) {
     SDL_Renderer* renderer = sdlManager.getRenderer();
     SDL_SetRenderDrawColor(renderer, Constants::BACKGROUND_COLOR.r, Constants::BACKGROUND_COLOR.g,
                            Constants::BACKGROUND_COLOR.b, Constants::BACKGROUND_COLOR.a);
@@ -42,8 +43,15 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
                  Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT);
     renderButton(Constants::BUTTON_TEXT_EXPLORE, Constants::BUTTON_X, Constants::BUTTON_Y_EXPLORE,
                  Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT);
+    renderButton(Constants::BUTTON_TEXT_CRAFT, Constants::BUTTON_X, Constants::BUTTON_Y_CRAFT,
+                 Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT);
 
-    // Display operation hints
+    // Render crafting panel
+    if (showCraftingPanel) {
+        renderCraftingPanel(craftingSystem, inventory);
+    }
+
+    // Show operation hints
     int hintX = Constants::HINT_X;
     int hintY = Constants::WINDOW_HEIGHT - Constants::HINT_BOTTOM_OFFSET;
     renderText(Constants::HINT_TITLE, hintX, hintY, Constants::TEXT_COLOR);
@@ -308,4 +316,129 @@ std::vector<std::string> View::getDetailedCardInfo(const Card& card) {
     }
 
     return info;
+}
+
+void View::renderCraftingPanel(const CraftingSystem& craftingSystem, const Inventory& inventory) {
+    SDL_Renderer* renderer = sdlManager.getRenderer();
+    
+    // Render semi-transparent background overlay
+    SDL_Rect overlay = {0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT};
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+    SDL_RenderFillRect(renderer, &overlay);
+    
+    // Render crafting panel background
+    SDL_Rect panelRect = {Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y, 
+                          Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT};
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
+    SDL_RenderFillRect(renderer, &panelRect);
+    
+    // Render border
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_RenderDrawRect(renderer, &panelRect);
+    
+    // Title
+    renderText("Crafting System", Constants::CRAFT_PANEL_X + 20, Constants::CRAFT_PANEL_Y + 20, Constants::TEXT_COLOR);
+    
+    // Close hint
+    renderText("Press C or click blank area to close", Constants::CRAFT_PANEL_X + 20, Constants::CRAFT_PANEL_Y + 45, 
+               {180, 180, 180, 255});
+    
+    // Get all recipes and render
+    auto allRecipes = craftingSystem.getAllRecipes();
+    renderRecipeList(allRecipes, inventory);
+}
+
+void View::renderRecipeList(const std::vector<Recipe>& recipes, const Inventory& inventory) {
+    int startY = Constants::CRAFT_PANEL_Y + 80;
+    int currentY = startY;
+    
+    for (size_t i = 0; i < recipes.size(); ++i) {
+        const Recipe& recipe = recipes[i];
+        bool canCraft = false;
+        
+        // Check if crafting is possible
+        if (recipe.isUnlocked) {
+            canCraft = true;
+            for (const auto& ingredient : recipe.ingredients) {
+                const Card& requiredCard = ingredient.first;
+                int requiredQuantity = ingredient.second;
+                
+                bool hasEnough = false;
+                for (const auto& card : inventory.getCards()) {
+                    if (card.name == requiredCard.name && 
+                        card.rarity == requiredCard.rarity &&
+                        card.quantity >= requiredQuantity) {
+                        hasEnough = true;
+                        break;
+                    }
+                }
+                
+                if (!hasEnough) {
+                    canCraft = false;
+                    break;
+                }
+            }
+        }
+        
+        renderRecipeItem(recipe, Constants::CRAFT_PANEL_X + 10, currentY, canCraft);
+        currentY += Constants::RECIPE_ITEM_HEIGHT;
+        
+        // Prevent exceeding panel range
+        if (currentY + Constants::RECIPE_ITEM_HEIGHT > Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT - 20) {
+            break;
+        }
+    }
+}
+
+void View::renderRecipeItem(const Recipe& recipe, int x, int y, bool canCraft) {
+    SDL_Renderer* renderer = sdlManager.getRenderer();
+    
+    // Background color changes depending on whether crafting is possible
+    SDL_Color bgColor = canCraft ? SDL_Color{20, 60, 20, 255} : SDL_Color{60, 20, 20, 255};
+    if (!recipe.isUnlocked) {
+        bgColor = {30, 30, 30, 255};
+    }
+    
+    SDL_Rect itemRect = {x, y, Constants::CRAFT_PANEL_WIDTH - 20, Constants::RECIPE_ITEM_HEIGHT - 5};
+    SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+    SDL_RenderFillRect(renderer, &itemRect);
+    
+    // Border
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_RenderDrawRect(renderer, &itemRect);
+    
+    // Recipe name
+    SDL_Color textColor = canCraft ? Constants::TEXT_COLOR : SDL_Color{150, 150, 150, 255};
+    if (!recipe.isUnlocked) {
+        textColor = {100, 100, 100, 255};
+        renderText("??? (Locked)", x + 10, y + 5, textColor);
+    } else {
+        renderText(recipe.name, x + 10, y + 5, textColor);
+        
+        // Success rate
+        std::string successText = "Success Rate: " + std::to_string(static_cast<int>(recipe.successRate * 100)) + "%";
+        renderText(successText, x + 10, y + 25, {200, 200, 200, 255});
+        
+        // Ingredient requirements
+        renderIngredientsList(recipe, x + 250, y + 5);
+        
+        // Result
+        std::string resultText = "→ " + recipe.result.name;
+        renderText(resultText, x + 250, y + 35, textColor);
+    }
+}
+
+void View::renderIngredientsList(const Recipe& recipe, int x, int y) {
+    std::string ingredientsText = "Requires: ";
+    
+    for (size_t i = 0; i < recipe.ingredients.size(); ++i) {
+        const auto& ingredient = recipe.ingredients[i];
+        ingredientsText += ingredient.first.name + " x" + std::to_string(ingredient.second);
+        
+        if (i < recipe.ingredients.size() - 1) {
+            ingredientsText += ", ";
+        }
+    }
+    
+    renderText(ingredientsText, x, y, {180, 180, 180, 255});
 }

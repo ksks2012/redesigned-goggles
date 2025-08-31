@@ -4,11 +4,13 @@
 #include "SDLManager.h"
 #include "Inventory.h"
 #include "Card.h"
+#include "CraftingSystem.h"
 
 class View {
 public:
     View(SDLManager& sdl);
-    void render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY);
+    void render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
+                bool showCraftingPanel, const CraftingSystem& craftingSystem);
 
 private:
     SDLManager& sdlManager;
@@ -23,4 +25,10 @@ private:
     void renderTooltip(const Card& card, int mouseX, int mouseY);
     void renderTooltipBackground(int x, int y, int width, int height);
     std::vector<std::string> getDetailedCardInfo(const Card& card);
+    
+    // Crafting system related methods
+    void renderCraftingPanel(const CraftingSystem& craftingSystem, const Inventory& inventory);
+    void renderRecipeList(const std::vector<Recipe>& recipes, const Inventory& inventory);
+    void renderRecipeItem(const Recipe& recipe, int x, int y, bool canCraft);
+    void renderIngredientsList(const Recipe& recipe, int x, int y);
 };

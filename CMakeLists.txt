@@ -17,6 +17,7 @@ set(SOURCES
     src/Controller.cpp
     src/Game.cpp
     src/SaveManager.cpp
+    src/CraftingSystem.cpp
     src/main.cpp
     src/Event.cpp
 )

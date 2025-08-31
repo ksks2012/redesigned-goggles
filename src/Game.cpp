@@ -3,7 +3,7 @@
 #include <thread>
 #include <iostream>
 
-Game::Game() : sdlManager(), inventory(), view(sdlManager), controller(inventory, view), saveManager("game_save.json") {
+Game::Game() : sdlManager(), inventory(), craftingSystem(), view(sdlManager), controller(inventory, view, craftingSystem), saveManager("game_save.json") {
     // Set save and load callback functions
     controller.setSaveCallback([this]() { return this->saveGame(); });
     controller.setLoadCallback([this]() { return this->loadGame(); });

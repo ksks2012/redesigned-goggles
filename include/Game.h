@@ -4,6 +4,7 @@
 #include "View.h"
 #include "Controller.h"
 #include "SaveManager.h"
+#include "CraftingSystem.h"
 
 class Game {
 public:
@@ -16,6 +17,7 @@ public:
 private:
     SDLManager sdlManager;
     Inventory inventory;
+    CraftingSystem craftingSystem;
     View view;
     Controller controller;
     SaveManager saveManager;

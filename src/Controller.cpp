@@ -4,7 +4,8 @@
 #include <thread>
 #include <iostream>
 
-Controller::Controller(Inventory& inv, View& v) : inventory(inv), view(v), selectedCard(nullptr), running(true) {}
+Controller::Controller(Inventory& inv, View& v, CraftingSystem& crafting) 
+    : inventory(inv), view(v), craftingSystem(crafting), selectedCard(nullptr), running(true) {}
 
 void Controller::handleEvents() {
     SDL_Event event;
@@ -39,7 +40,7 @@ bool Controller::isRunning() const {
 }
 
 void Controller::updateView() {
-    view.render(inventory, selectedCard, mouseX, mouseY);
+    view.render(inventory, selectedCard, mouseX, mouseY, showCraftingPanel, craftingSystem);
 }
 
 void Controller::organizeInventory() {
@@ -75,29 +76,43 @@ void Controller::organizeInventory() {
 
 void Controller::handleMouseDown(int x, int y) {
     if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_ADD && y <= Constants::BUTTON_Y_ADD_END) {
+        // Add card button
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
         inventory.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
-    } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_REMOVE && y <= Constants::BUTTON_Y_REMOVE_END) {
+        } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_REMOVE && y <= Constants::BUTTON_Y_REMOVE_END) {
+        // Remove card button
         auto& cards = inventory.getCards();
         if (!cards.empty()) {
             inventory.removeCard(cards[0].name, cards[0].rarity);
         }
-    } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_EXPLORE && y <= Constants::BUTTON_Y_EXPLORE_END) {
+        } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_EXPLORE && y <= Constants::BUTTON_Y_EXPLORE_END) {
+        // Explore button
         handleExplore();
-    }
-
-    int index = 0;
-    for (const auto& card : inventory.getCards()) {
-        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
-        if (x >= Constants::CARD_X && x <= Constants::CARD_MAX_X && y >= cardY && y <= cardY + Constants::CARD_HEIGHT) {
-            selectedCard = const_cast<Card*>(&card);
-            return;
+        } else if (x >= Constants::BUTTON_X && x <= Constants::BUTTON_MAX_X && y >= Constants::BUTTON_Y_CRAFT && y <= Constants::BUTTON_Y_CRAFT_END) {
+        // Crafting button
+        showCraftingPanel = !showCraftingPanel;
+        std::cout << (showCraftingPanel ? "Crafting panel opened" : "Crafting panel closed") << std::endl;
+        } else if (showCraftingPanel) {
+        // Handle clicks inside crafting panel
+        handleCrafting();
+        return;
         }
-        index++;
+
+        // Card selection logic (only when crafting panel is not shown)
+    if (!showCraftingPanel) {
+        int index = 0;
+        for (const auto& card : inventory.getCards()) {
+            int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
+            if (x >= Constants::CARD_X && x <= Constants::CARD_MAX_X && y >= cardY && y <= cardY + Constants::CARD_HEIGHT) {
+                selectedCard = const_cast<Card*>(&card);
+                return;
+            }
+            index++;
+        }
+        selectedCard = nullptr;
     }
-    selectedCard = nullptr;
 }
 
 void Controller::handleExplore() {
@@ -153,6 +168,12 @@ void Controller::handleKeyDown(SDL_Keycode key) {
                 }
             }
             break;
+            
+        case SDLK_c:
+            // Press C to toggle crafting panel
+            showCraftingPanel = !showCraftingPanel;
+            std::cout << (showCraftingPanel ? "Crafting panel opened" : "Crafting panel closed") << std::endl;
+            break;
 
         case SDLK_ESCAPE:
             // ESC to exit game
@@ -161,5 +182,45 @@ void Controller::handleKeyDown(SDL_Keycode key) {
 
         default:
             break;
+    }
+}
+
+void Controller::handleCrafting() {
+    // Simplified crafting panel click handling
+    // Only handles recipe selection here; actual UI click detection is handled in View
+
+    // Get available recipes
+    auto availableRecipes = craftingSystem.getAvailableRecipes(inventory);
+
+    if (availableRecipes.empty()) {
+        std::cout << "No available crafting recipes" << std::endl;
+        return;
+    }
+
+    // Simple recipe selection logic (can be extended to more complex UI later)
+    // Uses mouse position to select recipe
+    int recipeIndex = (mouseY - Constants::CRAFT_PANEL_Y - 50) / Constants::RECIPE_ITEM_HEIGHT;
+
+    if (recipeIndex >= 0 && recipeIndex < static_cast<int>(availableRecipes.size())) {
+        craftSelectedRecipe(availableRecipes[recipeIndex]);
+    }
+}
+
+void Controller::craftSelectedRecipe(const Recipe& recipe) {
+    std::cout << "Attempting to craft: " << recipe.name << std::endl;
+
+    // Check if crafting is possible
+    if (!craftingSystem.canCraft(recipe, inventory)) {
+        std::cout << "Cannot craft " << recipe.name << " - insufficient materials or recipe not unlocked" << std::endl;
+        return;
+    }
+
+    // Perform crafting
+    CraftingResult result = craftingSystem.craftItem(recipe, inventory);
+
+    if (result.success) {
+        std::cout << "Crafting successful! Received: " << result.resultCard.name << std::endl;
+    } else {
+        std::cout << "Crafting failed: " << result.message << std::endl;
     }
 }
