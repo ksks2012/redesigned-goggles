@@ -70,30 +70,8 @@ void Game::initializeDefaultGame() {
 }
 
 void Game::initializeEditor() {
-    // Create data manager for editor
-    dataManager = std::make_unique<GameDataManager>();
-    
-    // Initialize some test data
-    MaterialTemplate wood;
-    wood.id = "wood";
-    wood.name = "Wood";
-    wood.type = CardType::BUILDING;
-    wood.rarity = 1;
-    wood.description = "Basic building material";
-    wood.attributes[AttributeType::WEIGHT] = 1.0f;
-    wood.attributes[AttributeType::CRAFTING_VALUE] = 2.0f;
-    dataManager->addMaterial(wood);
-    
-    MaterialTemplate iron;
-    iron.id = "iron";
-    iron.name = "Iron";
-    iron.type = CardType::METAL;
-    iron.rarity = 2;
-    iron.description = "Strong metal for tools and weapons";
-    iron.attributes[AttributeType::WEIGHT] = 3.0f;
-    iron.attributes[AttributeType::CRAFTING_VALUE] = 5.0f;
-    iron.attributes[AttributeType::TRADE_VALUE] = 10.0f;
-    dataManager->addMaterial(iron);
+    // Create data manager for editor with game instance reference
+    dataManager = std::make_unique<GameDataManager>(this);
     
     if (imguiManager.initialize(sdlManager.getWindow(), sdlManager.getRenderer())) {
         // Provide data manager to ImGuiManager

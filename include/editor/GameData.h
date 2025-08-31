@@ -85,10 +85,31 @@ struct EventTemplate {
  * Central data manager for the editor system
  * Handles all game data that can be edited
  */
+class Game; // Forward declaration
+
 class GameDataManager {
 public:
     GameDataManager();
+    explicit GameDataManager(Game* gameInstance);
     ~GameDataManager() = default;
+
+    // Game instance management
+    void setGameInstance(Game* gameInstance) { gameInstance_ = gameInstance; }
+    Game* getGameInstance() const { return gameInstance_; }
+    
+    // Live data access
+    void syncFromGame(); // Sync editor data from current game state
+    void syncToGame();   // Apply editor changes to game
+    
+    // Real-time game state inspection
+    struct GameState {
+        std::vector<Card> inventoryCards;
+        int playerHealth;
+        std::vector<std::string> availableRecipes;
+        // Add more state fields as needed
+    };
+    
+    GameState getCurrentGameState() const;
 
     // Material management
     void addMaterial(const MaterialTemplate& material);
@@ -137,6 +158,9 @@ private:
     std::vector<MaterialTemplate> materials_;
     std::vector<Recipe> recipes_;
     std::vector<EventTemplate> events_;
+    
+    // Game instance reference for live data
+    Game* gameInstance_;
     
     // Undo/redo system
     struct DataState {

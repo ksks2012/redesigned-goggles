@@ -17,6 +17,14 @@ public:
     
     bool saveGame();
     bool loadGame();
+    
+    // Provide access to game data for editor
+    Inventory& getInventory() { return inventory; }
+    const Inventory& getInventory() const { return inventory; }
+    CraftingSystem& getCraftingSystem() { return craftingSystem; }
+    const CraftingSystem& getCraftingSystem() const { return craftingSystem; }
+    Controller& getController() { return controller; }
+    const Controller& getController() const { return controller; }
 
 private:
     SDLManager sdlManager;

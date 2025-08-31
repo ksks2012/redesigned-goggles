@@ -27,6 +27,7 @@ private:
     void handleRecipeCommands();
     void handleEventCommands();
     void handleDataCommands();
+    void handleGameStateCommands(); // New: Game state inspection
     
     // Material operations
     void listMaterials();
@@ -54,6 +55,14 @@ private:
     void saveData();
     void loadData();
     void exportData();
+    void syncFromGame();
+    void syncToGame();
+    
+    // Game state inspection
+    void showGameState();
+    void showInventory();
+    void showRecipeStatus();
+    void refreshGameData();
     
     // Utility functions
     std::string getUserInput(const std::string& prompt);

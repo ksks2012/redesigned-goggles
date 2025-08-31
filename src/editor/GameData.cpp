@@ -1,9 +1,13 @@
 #include "editor/GameData.h"
+#include "Game.h"
 #include "Constants.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // MaterialTemplate implementation
 Card MaterialTemplate::toCard(int quantity) const {
@@ -68,9 +72,19 @@ void EventTemplate::trigger() const {
 }
 
 // GameDataManager implementation
-GameDataManager::GameDataManager() {
+GameDataManager::GameDataManager() : gameInstance_(nullptr) {
     // Initialize with some default materials
     initializeDefaults();
+}
+
+GameDataManager::GameDataManager(Game* gameInstance) : gameInstance_(gameInstance) {
+    // Initialize with some default materials
+    initializeDefaults();
+    
+    // Sync from game if available
+    if (gameInstance_) {
+        syncFromGame();
+    }
 }
 
 void GameDataManager::addMaterial(const MaterialTemplate& material) {
@@ -247,26 +261,167 @@ GameDataManager::ValidationResult GameDataManager::validateData() const {
 }
 
 bool GameDataManager::saveToFile(const std::string& filename) const {
-    // TODO: Implement JSON serialization
-    // For now, just a placeholder
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+    try {
+        json j;
+        
+        // Save materials
+        j["materials"] = json::array();
+        for (const auto& material : materials_) {
+            json matJson;
+            matJson["id"] = material.id;
+            matJson["name"] = material.name;
+            matJson["type"] = static_cast<int>(material.type);
+            matJson["rarity"] = material.rarity;
+            matJson["description"] = material.description;
+            
+            matJson["attributes"] = json::object();
+            for (const auto& attr : material.attributes) {
+                matJson["attributes"][std::to_string(static_cast<int>(attr.first))] = attr.second;
+            }
+            
+            j["materials"].push_back(matJson);
+        }
+        
+        // Save recipes
+        j["recipes"] = json::array();
+        for (const auto& recipe : recipes_) {
+            json recipeJson;
+            recipeJson["id"] = recipe.id;
+            recipeJson["name"] = recipe.name;
+            recipeJson["description"] = recipe.description;
+            recipeJson["success_rate"] = recipe.successRate;
+            recipeJson["unlock_level"] = recipe.unlockLevel;
+            recipeJson["is_unlocked"] = recipe.isUnlocked;
+            
+            // Save ingredients
+            recipeJson["ingredients"] = json::array();
+            for (const auto& ingredient : recipe.ingredients) {
+                json ingJson;
+                ingJson["card_name"] = ingredient.first.name;
+                ingJson["quantity"] = ingredient.second;
+                recipeJson["ingredients"].push_back(ingJson);
+            }
+            
+            // Save result
+            recipeJson["result"] = json::object();
+            recipeJson["result"]["name"] = recipe.result.name;
+            recipeJson["result"]["type"] = static_cast<int>(recipe.result.type);
+            recipeJson["result"]["rarity"] = recipe.result.rarity;
+            
+            j["recipes"].push_back(recipeJson);
+        }
+        
+        // Save events
+        j["events"] = json::array();
+        for (const auto& event : events_) {
+            json eventJson;
+            eventJson["id"] = event.id;
+            eventJson["name"] = event.name;
+            eventJson["description"] = event.description;
+            eventJson["is_repeatable"] = event.isRepeatable;
+            eventJson["priority"] = event.priority;
+            j["events"].push_back(eventJson);
+        }
+        
+        // Write to file
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file for writing: " << filename << std::endl;
+            return false;
+        }
+        
+        file << j.dump(4); // Pretty print with 4 spaces
+        std::cout << "Game data saved to " << filename << std::endl;
+        return true;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error saving to file: " << e.what() << std::endl;
         return false;
     }
-    
-    file << "// GameData export - TODO: Implement JSON format\n";
-    file << "Materials: " << materials_.size() << "\n";
-    file << "Recipes: " << recipes_.size() << "\n";
-    file << "Events: " << events_.size() << "\n";
-    
-    return true;
 }
 
 bool GameDataManager::loadFromFile(const std::string& filename) {
-    // TODO: Implement JSON deserialization
-    // For now, just a placeholder
-    std::ifstream file(filename);
-    return file.is_open();
+    try {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file for reading: " << filename << std::endl;
+            return false;
+        }
+        
+        json j;
+        file >> j;
+        
+        // Load materials
+        if (j.contains("materials")) {
+            materials_.clear();
+            for (const auto& matJson : j["materials"]) {
+                MaterialTemplate material;
+                material.id = matJson["id"];
+                material.name = matJson["name"];
+                material.type = static_cast<CardType>(matJson["type"]);
+                material.rarity = matJson["rarity"];
+                if (matJson.contains("description")) {
+                    material.description = matJson["description"];
+                }
+                
+                if (matJson.contains("attributes")) {
+                    for (const auto& attr : matJson["attributes"].items()) {
+                        AttributeType attrType = static_cast<AttributeType>(std::stoi(attr.key()));
+                        material.attributes[attrType] = attr.value();
+                    }
+                }
+                
+                materials_.push_back(material);
+            }
+        }
+        
+        // Load recipes
+        if (j.contains("recipes")) {
+            recipes_.clear();
+            for (const auto& recipeJson : j["recipes"]) {
+                // Create basic recipe structure
+                std::vector<std::pair<Card, int>> ingredients;
+                Card result("placeholder", 1, CardType::MISC, 1);
+                
+                Recipe recipe(
+                    recipeJson["id"],
+                    recipeJson["name"],
+                    recipeJson.value("description", ""),
+                    ingredients,
+                    result,
+                    recipeJson.value("success_rate", 1.0f),
+                    recipeJson.value("unlock_level", 0)
+                );
+                
+                recipes_.push_back(recipe);
+            }
+        }
+        
+        // Load events
+        if (j.contains("events")) {
+            events_.clear();
+            for (const auto& eventJson : j["events"]) {
+                EventTemplate event;
+                event.id = eventJson["id"];
+                event.name = eventJson["name"];
+                event.description = eventJson.value("description", "");
+                event.isRepeatable = eventJson.value("is_repeatable", false);
+                event.priority = eventJson.value("priority", 0);
+                
+                events_.push_back(event);
+            }
+        }
+        
+        std::cout << "Game data loaded from " << filename << std::endl;
+        std::cout << "Loaded " << materials_.size() << " materials, " 
+                  << recipes_.size() << " recipes, " 
+                  << events_.size() << " events" << std::endl;
+        return true;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading from file: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void GameDataManager::pushState() {
@@ -335,4 +490,67 @@ void GameDataManager::initializeDefaults() {
         material.attributes[AttributeType::WEIGHT] = 1.0f;
         materials_.push_back(material);
     }
+}
+
+// Game data synchronization methods
+void GameDataManager::syncFromGame() {
+    if (!gameInstance_) return;
+    
+    // Sync materials from current inventory
+    materials_.clear();
+    const auto& inventory = gameInstance_->getInventory();
+    auto inventoryCards = inventory.getCards();
+    
+    // Create materials from inventory cards
+    std::set<std::string> addedMaterials;
+    for (const auto& card : inventoryCards) {
+        if (addedMaterials.find(card.name) == addedMaterials.end()) {
+            MaterialTemplate material = MaterialTemplate::fromCard(card);
+            materials_.push_back(material);
+            addedMaterials.insert(card.name);
+        }
+    }
+    
+    // Sync recipes from crafting system
+    recipes_.clear();
+    const auto& craftingSystem = gameInstance_->getCraftingSystem();
+    recipes_ = craftingSystem.getAllRecipes();
+    
+    std::cout << "Synced " << materials_.size() << " materials and " 
+              << recipes_.size() << " recipes from game" << std::endl;
+}
+
+void GameDataManager::syncToGame() {
+    if (!gameInstance_) {
+        std::cout << "No game instance available for sync" << std::endl;
+        return;
+    }
+    
+    // Note: This is more complex as it requires modifying the game state
+    // For now, we'll focus on reading from the game
+    std::cout << "Sync to game not yet implemented (requires careful state management)" << std::endl;
+}
+
+GameDataManager::GameState GameDataManager::getCurrentGameState() const {
+    GameState state;
+    
+    if (!gameInstance_) {
+        return state;
+    }
+    
+    // Get inventory cards
+    const auto& inventory = gameInstance_->getInventory();
+    state.inventoryCards = inventory.getCards();
+    
+    // Get available recipes
+    const auto& craftingSystem = gameInstance_->getCraftingSystem();
+    auto recipes = craftingSystem.getAllRecipes();
+    for (const auto& recipe : recipes) {
+        state.availableRecipes.push_back(recipe.name);
+    }
+    
+    // Note: Player health would need to be added to the game state
+    state.playerHealth = 100; // Placeholder
+    
+    return state;
 }

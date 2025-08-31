@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <set>
+#include <map>
 
 ConsoleEditor::ConsoleEditor(GameDataManager& dataManager) 
     : dataManager_(dataManager), running_(true) {
@@ -35,6 +37,8 @@ void ConsoleEditor::run() {
             handleEventCommands();
         } else if (action == "data" || action == "d") {
             handleDataCommands();
+        } else if (action == "game" || action == "g") {
+            handleGameStateCommands();
         } else if (action == "quit" || action == "exit" || action == "q") {
             running_ = false;
         } else {
@@ -49,6 +53,7 @@ void ConsoleEditor::showHelp() {
     std::cout << "recipe   (rec, r) - Recipe editing commands" << std::endl;
     std::cout << "event    (evt, e) - Event editing commands" << std::endl;
     std::cout << "data     (d)      - Data operations (save/load/validate)" << std::endl;
+    std::cout << "game     (g)      - Game state inspection and sync" << std::endl;
     std::cout << "help     (h)      - Show this help" << std::endl;
     std::cout << "quit     (q)      - Exit editor" << std::endl;
 }
@@ -131,18 +136,22 @@ void ConsoleEditor::handleEventCommands() {
 void ConsoleEditor::handleDataCommands() {
     std::cout << "\nData Commands:" << std::endl;
     std::cout << "1. Validate data" << std::endl;
-    std::cout << "2. Save data" << std::endl;
-    std::cout << "3. Load data" << std::endl;
+    std::cout << "2. Save data to JSON" << std::endl;
+    std::cout << "3. Load data from JSON" << std::endl;
     std::cout << "4. Export data" << std::endl;
+    std::cout << "5. Sync from game" << std::endl;
+    std::cout << "6. Sync to game" << std::endl;
     std::cout << "0. Back to main menu" << std::endl;
     
-    int choice = getUserChoice("Choose option", 0, 4);
+    int choice = getUserChoice("Choose option", 0, 6);
     
     switch (choice) {
         case 1: validateData(); break;
         case 2: saveData(); break;
         case 3: loadData(); break;
         case 4: exportData(); break;
+        case 5: syncFromGame(); break;
+        case 6: syncToGame(); break;
         case 0: break;
     }
 }
@@ -396,13 +405,13 @@ void ConsoleEditor::validateData() {
 }
 
 void ConsoleEditor::saveData() {
-    std::string filename = getUserInput("Filename to save to (default: gamedata.json)");
-    if (filename.empty()) filename = "gamedata.json";
+    std::string filename = getUserInput("Filename to save to (default: editor_data.json)");
+    if (filename.empty()) filename = "editor_data.json";
     
     if (dataManager_.saveToFile(filename)) {
-        std::cout << "Data saved to " << filename << std::endl;
+        std::cout << "Editor data saved to " << filename << std::endl;
     } else {
-        std::cout << "Failed to save data to " << filename << std::endl;
+        std::cout << "Failed to save editor data to " << filename << std::endl;
     }
 }
 
@@ -410,9 +419,9 @@ void ConsoleEditor::loadData() {
     std::string filename = getUserInput("Filename to load from");
     
     if (dataManager_.loadFromFile(filename)) {
-        std::cout << "Data loaded from " << filename << std::endl;
+        std::cout << "Editor data loaded from " << filename << std::endl;
     } else {
-        std::cout << "Failed to load data from " << filename << std::endl;
+        std::cout << "Failed to load editor data from " << filename << std::endl;
     }
 }
 
@@ -513,4 +522,108 @@ CardType ConsoleEditor::stringToCardType(const std::string& str) {
     if (str == "metal" || str == "Metal") return CardType::METAL;
     if (str == "building" || str == "Building") return CardType::BUILDING;
     return CardType::MISC; // Default
+}
+
+// Game state inspection methods
+void ConsoleEditor::handleGameStateCommands() {
+    std::cout << "\nGame State Commands:" << std::endl;
+    std::cout << "1. Show current game state" << std::endl;
+    std::cout << "2. Show inventory" << std::endl;
+    std::cout << "3. Show recipe status" << std::endl;
+    std::cout << "4. Refresh game data" << std::endl;
+    std::cout << "0. Back to main menu" << std::endl;
+    
+    int choice = getUserChoice("Choose option", 0, 4);
+    
+    switch (choice) {
+        case 1: showGameState(); break;
+        case 2: showInventory(); break;
+        case 3: showRecipeStatus(); break;
+        case 4: refreshGameData(); break;
+        case 0: break;
+    }
+}
+
+void ConsoleEditor::showGameState() {
+    auto gameState = dataManager_.getCurrentGameState();
+    
+    std::cout << "\n=== CURRENT GAME STATE ===" << std::endl;
+    std::cout << "Player Health: " << gameState.playerHealth << std::endl;
+    std::cout << "Inventory Items: " << gameState.inventoryCards.size() << std::endl;
+    std::cout << "Available Recipes: " << gameState.availableRecipes.size() << std::endl;
+    
+    if (!gameState.availableRecipes.empty()) {
+        std::cout << "\nRecipes:" << std::endl;
+        for (const auto& recipe : gameState.availableRecipes) {
+            std::cout << "- " << recipe << std::endl;
+        }
+    }
+}
+
+void ConsoleEditor::showInventory() {
+    auto gameState = dataManager_.getCurrentGameState();
+    
+    std::cout << "\n=== CURRENT INVENTORY ===" << std::endl;
+    if (gameState.inventoryCards.empty()) {
+        std::cout << "Inventory is empty" << std::endl;
+        return;
+    }
+    
+    std::cout << std::left << std::setw(25) << "Card Name" 
+              << std::setw(10) << "Quantity" 
+              << std::setw(15) << "Type" 
+              << std::setw(10) << "Rarity" << std::endl;
+    std::cout << std::string(60, '-') << std::endl;
+    
+    for (const auto& card : gameState.inventoryCards) {
+        std::cout << std::left << std::setw(25) << card.name
+                  << std::setw(10) << card.quantity
+                  << std::setw(15) << cardTypeToString(card.type)
+                  << std::setw(10) << card.rarity << std::endl;
+    }
+    
+    std::cout << "\nTotal cards: " << gameState.inventoryCards.size() << std::endl;
+}
+
+void ConsoleEditor::showRecipeStatus() {
+    auto gameState = dataManager_.getCurrentGameState();
+    
+    std::cout << "\n=== RECIPE STATUS ===" << std::endl;
+    std::cout << "Available recipes: " << gameState.availableRecipes.size() << std::endl;
+    
+    if (!gameState.availableRecipes.empty()) {
+        for (const auto& recipeName : gameState.availableRecipes) {
+            std::cout << "✓ " << recipeName << std::endl;
+        }
+    }
+    
+    // Show editor recipes vs game recipes
+    const auto& editorRecipes = dataManager_.getAllRecipes();
+    std::cout << "\nEditor recipes: " << editorRecipes.size() << std::endl;
+    
+    std::set<std::string> gameRecipeSet(gameState.availableRecipes.begin(), gameState.availableRecipes.end());
+    
+    for (const auto& recipe : editorRecipes) {
+        bool inGame = gameRecipeSet.find(recipe.name) != gameRecipeSet.end();
+        std::cout << (inGame ? "✓" : "✗") << " " << recipe.name;
+        if (!inGame) std::cout << " (editor only)";
+        std::cout << std::endl;
+    }
+}
+
+void ConsoleEditor::refreshGameData() {
+    std::cout << "Refreshing data from game..." << std::endl;
+    dataManager_.syncFromGame();
+    std::cout << "Game data refreshed!" << std::endl;
+}
+
+void ConsoleEditor::syncFromGame() {
+    std::cout << "Syncing editor data from current game state..." << std::endl;
+    dataManager_.syncFromGame();
+    std::cout << "Sync complete!" << std::endl;
+}
+
+void ConsoleEditor::syncToGame() {
+    std::cout << "Syncing editor changes to game..." << std::endl;
+    dataManager_.syncToGame();
 }
