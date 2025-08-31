@@ -1,12 +1,16 @@
 #include "ImGuiManager.h"
+#include "editor/GameData.h"
+#include "editor/ConsoleEditor.h"
 #include <iostream>
+#include <thread>
 
 // Placeholder implementation without actual ImGui
 // This allows the code to compile and run without ImGui installed
 // When ImGui is available, this can be replaced with actual implementation
 
 ImGuiManager::ImGuiManager() 
-    : initialized_(false), editorMode_(false), io_(nullptr) {
+    : initialized_(false), editorMode_(false), io_(nullptr), 
+      dataManager_(nullptr), consoleEditor_(nullptr), consoleEditorActive_(false) {
 }
 
 ImGuiManager::~ImGuiManager() {
@@ -39,11 +43,17 @@ void ImGuiManager::render() {
 bool ImGuiManager::handleEvent(SDL_Event* event) {
     if (!initialized_) return false;
     
-    // For now, just handle the editor toggle key
+    // Handle the editor toggle key
     if (event->type == SDL_KEYDOWN) {
         if (event->key.keysym.sym == SDLK_F1) {
             editorMode_ = !editorMode_;
             std::cout << "Editor mode " << (editorMode_ ? "enabled" : "disabled") << std::endl;
+            
+            // Start console editor when entering editor mode
+            if (editorMode_ && !consoleEditorActive_ && dataManager_) {
+                startConsoleEditor();
+            }
+            
             return true;
         }
     }
@@ -64,4 +74,48 @@ void ImGuiManager::setupStyle() {
 
 void ImGuiManager::setupFonts() {
     // Placeholder - would load fonts here
+}
+
+void ImGuiManager::setDataManager(GameDataManager* dataManager) {
+    dataManager_ = dataManager;
+}
+
+void ImGuiManager::startConsoleEditor() {
+    if (!dataManager_) {
+        std::cout << "Error: No data manager available for editor" << std::endl;
+        return;
+    }
+    
+    if (consoleEditorActive_) {
+        std::cout << "Console editor is already running" << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== STARTING CONSOLE EDITOR ===" << std::endl;
+    std::cout << "Opening editor in a separate thread..." << std::endl;
+    std::cout << "You can use the editor while the game is running!" << std::endl;
+    std::cout << "Close the terminal or type 'quit' to exit the editor." << std::endl;
+    
+    // Start console editor in a separate thread so it doesn't block the game
+    std::thread editorThread([this]() {
+        consoleEditorActive_ = true;
+        
+        try {
+            if (!consoleEditor_) {
+                consoleEditor_ = std::make_unique<ConsoleEditor>(*dataManager_);
+            }
+            
+            // Run the console editor
+            consoleEditor_->run();
+            
+        } catch (const std::exception& e) {
+            std::cout << "Console editor error: " << e.what() << std::endl;
+        }
+        
+        consoleEditorActive_ = false;
+        std::cout << "Console editor closed." << std::endl;
+    });
+    
+    // Detach the thread so it runs independently
+    editorThread.detach();
 }

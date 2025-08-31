@@ -7,6 +7,7 @@
 #include "CraftingSystem.h"
 #include "ImGuiManager.h"
 #include "editor/GameEditor.h"
+#include "editor/GameData.h"
 #include <memory>
 
 class Game {
@@ -28,6 +29,7 @@ private:
     // Editor system
     ImGuiManager imguiManager;
     std::unique_ptr<GameEditor> gameEditor;
+    std::unique_ptr<GameDataManager> dataManager;
     
     void initializeDefaultGame();
     void initializeEditor();
