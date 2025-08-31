@@ -26,6 +26,8 @@ constexpr SDL_Color RARITY_COMMON = {100, 100, 100, 255};
 constexpr SDL_Color RARITY_RARE = {100, 100, 255, 255};
 constexpr SDL_Color RARITY_LEGENDARY = {255, 215, 0, 255};
 constexpr SDL_Color ATTRIBUTE_TEXT_COLOR = {200, 200, 200, 255}; // Light gray for attributes
+constexpr SDL_Color TOOLTIP_BG_COLOR = {30, 30, 30, 230}; // Dark gray with some transparency
+
 
 // View: Card rendering
 constexpr int CARD_X = 50;
@@ -205,6 +207,7 @@ inline const std::vector<Event> EXPLORATION_EVENTS = {
     Event("Safe exploration", {CardFactory::createFood()}, {}, 0.05f)
 };
 
+// Tooltip and hints
 constexpr int HINT_X = 20;
 constexpr int HINT_BOTTOM_OFFSET = 120;
 constexpr int HINT_LINE_SPACING = 28;
@@ -213,4 +216,22 @@ constexpr const char* HINT_SAVE = "S: Save progress";
 constexpr const char* HINT_LOAD = "L: Load progress";
 constexpr const char* HINT_EXIT = "ESC: Exit game";
 
+// Tooltip text
+const std::string TOOLTIP_RARITY = "Rarity";
+const std::string TOOLTIP_COMMON = "Common";
+const std::string TOOLTIP_RARE = "Rare";
+const std::string TOOLTIP_LEGENDARY = "Legendary";
+const std::string TOOLTIP_QUANTITY = "Quantity";
+const std::string TOOLTIP_WEIGHT = "Weight";
+const std::string TOOLTIP_TOTAL_WEIGHT = "Total Weight";
+const std::string TOOLTIP_NUTRITION = "Nutrition";
+const std::string TOOLTIP_ATTACK = "Attack";
+const std::string TOOLTIP_DEFENSE = "Defense";
+const std::string TOOLTIP_HEALING = "Healing";
+const std::string TOOLTIP_DURABILITY = "Durability";
+const std::string TOOLTIP_BURN_VALUE = "Burn Value";
+const std::string TOOLTIP_CRAFTING_VALUE = "Crafting Value";
+const std::string TOOLTIP_TRADE_VALUE = "Trade Value";
+const std::string TOOLTIP_EDIBLE = "Edible";
+const std::string TOOLTIP_BURNABLE = "Burnable";
 }
