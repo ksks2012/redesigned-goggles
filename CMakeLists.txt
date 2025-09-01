@@ -32,6 +32,7 @@ set(SOURCES
     src/Game.cpp
     src/SaveManager.cpp
     src/CraftingSystem.cpp
+    src/DataManager.cpp
     src/main.cpp
     src/Event.cpp
     src/ui/UIComponent.cpp
@@ -60,6 +61,7 @@ set(LIB_SOURCES
     src/Game.cpp
     src/SaveManager.cpp
     src/CraftingSystem.cpp
+    src/DataManager.cpp
     src/Event.cpp
     src/ui/UIComponent.cpp
     src/ui/UIButton.cpp
@@ -85,6 +87,7 @@ if(CATCH2_AVAILABLE)
         tests/test_card.cpp
         tests/test_inventory.cpp
         tests/test_crafting_system.cpp
+        tests/test_data_manager.cpp
     )
     
     # Create test executable
