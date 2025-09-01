@@ -310,6 +310,192 @@ private:
     }
 };
 
+/**
+ * Event operations command handler
+ * Follows Single Responsibility Principle (SRP)
+ */
+class EventCommandHandler : public BaseCommandHandler, public IMenuHandler {
+public:
+    EventCommandHandler(std::shared_ptr<IUserInterface> ui,
+                       std::shared_ptr<IDataService> dataService,
+                       std::shared_ptr<IGameStateService> gameStateService)
+        : BaseCommandHandler(ui, dataService, gameStateService) {}
+    
+    std::string getCommandName() const override { return "event"; }
+    std::vector<std::string> getAliases() const override { return {"evt", "e"}; }
+    std::string getDescription() const override { return "Event operations"; }
+    
+    void execute() override {
+        ui_->displayMessage("\n=== EVENT OPERATIONS ===");
+        auto options = getMenuOptions();
+        for (size_t i = 0; i < options.size(); ++i) {
+            ui_->displayMessage(std::to_string(i + 1) + ". " + options[i]);
+        }
+        ui_->displayMessage("0. Back to main menu");
+        
+        int choice = ui_->getUserChoice("Choose option", 0, static_cast<int>(options.size()));
+        if (choice > 0) {
+            handleMenuChoice(choice - 1);
+        }
+    }
+    
+    std::string getMenuTitle() const override { return "Event Operations"; }
+    
+    std::vector<std::string> getMenuOptions() const override {
+        return {
+            "List events",
+            "Show event details",
+            "Create event",
+            "Edit event",
+            "Delete event"
+        };
+    }
+    
+    void handleMenuChoice(int choice) override {
+        switch (choice) {
+            case 0: listEvents(); break;
+            case 1: showEventDetails(); break;
+            case 2: createEvent(); break;
+            case 3: editEvent(); break;
+            case 4: deleteEvent(); break;
+            default: ui_->displayError("Invalid choice"); break;
+        }
+    }
+    
+private:
+    void listEvents() {
+        const auto& events = dataService_->getEvents();
+        
+        if (events.empty()) {
+            ui_->displayMessage("No events found.");
+            return;
+        }
+        
+        std::vector<std::vector<std::string>> data;
+        std::vector<std::string> headers = {"ID", "Name", "Type", "Trigger"};
+        
+        for (const auto& event : events) {
+            data.push_back({
+                event.id,
+                event.name,
+                event.type,
+                event.triggerCondition
+            });
+        }
+        
+        ui_->displayMessage("\n=== EVENTS (" + std::to_string(events.size()) + ") ===");
+        ui_->displayTable(data, headers);
+    }
+    
+    void showEventDetails() {
+        std::string id = ui_->getUserInput("Event ID");
+        
+        const auto* event = dataService_->findEvent(id);
+        if (!event) {
+            ui_->displayError("Event not found: " + id);
+            return;
+        }
+        
+        ui_->displayMessage("\n=== EVENT DETAILS ===");
+        ui_->displayMessage("ID: " + event->id);
+        ui_->displayMessage("Name: " + event->name);
+        ui_->displayMessage("Description: " + event->description);
+        ui_->displayMessage("Type: " + event->type);
+        ui_->displayMessage("Trigger Condition: " + event->triggerCondition);
+        ui_->displayMessage("Is Active: " + std::string(event->isActive ? "Yes" : "No"));
+        
+        if (!event->effects.empty()) {
+            ui_->displayMessage("Effects:");
+            for (const auto& effect : event->effects) {
+                ui_->displayMessage("  " + effect);
+            }
+        }
+    }
+    
+    void createEvent() {
+        DataManagement::EventData event;
+        
+        ui_->displayMessage("\n=== CREATE EVENT ===");
+        event.id = ui_->getUserInput("Event ID");
+        event.name = ui_->getUserInput("Event Name");
+        event.description = ui_->getUserInput("Event Description");
+        event.type = ui_->getUserInput("Event Type");
+        event.triggerCondition = ui_->getUserInput("Trigger Condition");
+        event.isActive = ui_->confirmAction("make event active");
+        
+        // Add effects
+        ui_->displayMessage("Add effects (enter empty line to finish):");
+        std::string effect;
+        while (!(effect = ui_->getUserInput("Effect")).empty()) {
+            event.effects.push_back(effect);
+        }
+        
+        if (dataService_->addEvent(event)) {
+            ui_->displaySuccess("Event '" + event.name + "' created successfully!");
+        } else {
+            ui_->displayError("Failed to create event");
+        }
+    }
+    
+    void editEvent() {
+        std::string id = ui_->getUserInput("Event ID to edit");
+        
+        auto* event = dataService_->findEvent(id);
+        if (!event) {
+            ui_->displayError("Event not found: " + id);
+            return;
+        }
+        
+        ui_->displayMessage("\nEditing event: " + event->name);
+        ui_->displayMessage("1. Change name");
+        ui_->displayMessage("2. Change description");
+        ui_->displayMessage("3. Change type");
+        ui_->displayMessage("4. Change trigger condition");
+        ui_->displayMessage("5. Toggle active status");
+        ui_->displayMessage("6. Edit effects");
+        ui_->displayMessage("0. Cancel");
+        
+        int choice = ui_->getUserChoice("Choose option", 0, 6);
+        switch (choice) {
+            case 1: event->name = ui_->getUserInput("New name"); break;
+            case 2: event->description = ui_->getUserInput("New description"); break;
+            case 3: event->type = ui_->getUserInput("New type"); break;
+            case 4: event->triggerCondition = ui_->getUserInput("New trigger condition"); break;
+            case 5: event->isActive = !event->isActive; break;
+            case 6: {
+                event->effects.clear();
+                ui_->displayMessage("Add new effects (enter empty line to finish):");
+                std::string effect;
+                while (!(effect = ui_->getUserInput("Effect")).empty()) {
+                    event->effects.push_back(effect);
+                }
+                break;
+            }
+            case 0: return;
+        }
+        
+        ui_->displaySuccess("Event updated successfully!");
+    }
+    
+    void deleteEvent() {
+        std::string id = ui_->getUserInput("Event ID to delete");
+        
+        const auto* event = dataService_->findEvent(id);
+        if (!event) {
+            ui_->displayError("Event not found: " + id);
+            return;
+        }
+        
+        if (ui_->confirmAction("delete event '" + event->name + "'")) {
+            if (dataService_->removeEvent(id)) {
+                ui_->displaySuccess("Event '" + event->name + "' deleted successfully!");
+            } else {
+                ui_->displayError("Failed to delete event");
+            }
+        }
+    }
+};
+
 } // namespace Editor
 
 #endif // EDITOR_COMMANDS_H

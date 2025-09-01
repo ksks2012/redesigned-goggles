@@ -61,8 +61,10 @@ public:
     
     // Event operations
     virtual const std::vector<DataManagement::EventData>& getEvents() const = 0;
+    virtual const DataManagement::EventData* findEvent(const std::string& id) const = 0;
+    virtual DataManagement::EventData* findEvent(const std::string& id) = 0;
     virtual bool addEvent(const DataManagement::EventData& event) = 0;
-    virtual bool removeEvent(const std::string& name) = 0;
+    virtual bool removeEvent(const std::string& id) = 0;
     
     // Data validation and persistence
     virtual DataManagement::ValidationResult validateAll() const = 0;

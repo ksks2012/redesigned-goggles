@@ -1,6 +1,7 @@
 #include "CraftingSystem.h"
 #include "Inventory.h"
 #include "Constants.h"
+#include "DataManager.h"
 #include <algorithm>
 #include <random>
 #include <iostream>
@@ -264,4 +265,62 @@ float CraftingSystem::calculateActualSuccessRate(const Recipe& recipe, const Inv
     }
     
     return std::min(1.0f, baseRate + qualityBonus);
+}
+
+void CraftingSystem::loadRecipesFromDataManager(const DataManagement::GameDataManager& dataManager) {
+    clearRecipes();
+    
+    const auto& recipeDataList = dataManager.getRecipes();
+    
+    for (const auto& recipeData : recipeDataList) {
+        // Convert DataManagement::RecipeData to Recipe
+        std::vector<std::pair<Card, int>> ingredients;
+        
+        for (const auto& ingredient : recipeData.ingredients) {
+            // Create card from material name - we'll need to find the material data
+            const auto* materialData = dataManager.findMaterial(ingredient.first, 1); // Default to rarity 1
+            if (materialData) {
+                Card ingredientCard = materialData->toCard();
+                ingredients.push_back({ingredientCard, ingredient.second});
+            } else {
+                // Fallback: create a basic card
+                Card ingredientCard(ingredient.first, 1, CardType::MISC, ingredient.second);
+                ingredients.push_back({ingredientCard, ingredient.second});
+            }
+        }
+        
+        // Create result card
+        const auto* resultMaterialData = dataManager.findMaterial(recipeData.resultMaterial, 1);
+        Card resultCard("placeholder", 1, CardType::MISC, 1); // Default initialization
+        if (resultMaterialData) {
+            resultCard = resultMaterialData->toCard();
+        } else {
+            // Create a basic result card
+            resultCard = Card(recipeData.resultMaterial, 1, CardType::MISC, 1);
+        }
+        
+        // Create the recipe
+        Recipe recipe(
+            recipeData.id,
+            recipeData.name,
+            recipeData.description,
+            ingredients,
+            resultCard,
+            recipeData.successRate,
+            recipeData.unlockLevel
+        );
+        
+        recipe.isUnlocked = recipeData.isUnlocked;
+        
+        // Add to our recipe list
+        recipes.push_back(recipe);
+        recipeIndexMap[recipe.id] = recipes.size() - 1;
+    }
+    
+    std::cout << "Loaded " << recipes.size() << " recipes from DataManager" << std::endl;
+}
+
+void CraftingSystem::clearRecipes() {
+    recipes.clear();
+    recipeIndexMap.clear();
 }

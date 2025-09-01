@@ -73,12 +73,18 @@ namespace DataManagement {
     /**
      * Event data structure for JSON serialization
      */
+    // TODO: type, triggerCondition
     struct EventData {
-        std::string name;
-        std::string description;
-        std::vector<std::string> rewardMaterials;
-        std::vector<std::string> penaltyMaterials;
-        float probability;
+        std::string id;                                // Event ID
+        std::string name;                              // Event name
+        std::string description;                       // Event description
+        std::string type;                              // Event type (e.g., "discovery", "encounter")
+        std::string triggerCondition;                  // Trigger condition description
+        bool isActive;                                 // Whether event is active
+        std::vector<std::string> effects;              // List of effect descriptions
+        std::vector<std::string> rewardMaterials;      // Reward materials (legacy)
+        std::vector<std::string> penaltyMaterials;     // Penalty materials (legacy)
+        float probability;                             // Event probability (legacy)
     };
 
     /**
