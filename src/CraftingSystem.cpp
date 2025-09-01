@@ -214,17 +214,21 @@ bool CraftingSystem::hasEnoughMaterials(const Recipe& recipe, const Inventory& i
         int requiredQuantity = ingredient.second;
         
         // Find the corresponding card and check the quantity
-        bool found = false;
+        int totalAvailable = 0;
         for (const auto& card : cards) {
+            // First try exact match (name and rarity)
             if (card.name == requiredCard.name && 
-                card.rarity == requiredCard.rarity &&
-                card.quantity >= requiredQuantity) {
-                found = true;
-                break;
+                card.rarity == requiredCard.rarity) {
+                totalAvailable += card.quantity;
+            }
+            // If exact match not enough, also consider same name but different rarity
+            // This allows more flexible crafting (e.g., using rare materials for common recipes)
+            else if (card.name == requiredCard.name && totalAvailable < requiredQuantity) {
+                totalAvailable += card.quantity;
             }
         }
         
-        if (!found) {
+        if (totalAvailable < requiredQuantity) {
             return false;
         }
     }
@@ -236,10 +240,38 @@ void CraftingSystem::consumeMaterials(const Recipe& recipe, Inventory& inventory
     for (const auto& ingredient : recipe.ingredients) {
         const Card& requiredCard = ingredient.first;
         int requiredQuantity = ingredient.second;
+        int remainingToRemove = requiredQuantity;
         
-        // Remove the required quantity of materials
-        for (int i = 0; i < requiredQuantity; ++i) {
-            inventory.removeCard(requiredCard.name, requiredCard.rarity);
+        // First try to remove exact matches (name and rarity)
+        auto cards = inventory.getCards();
+        for (auto& card : cards) {
+            if (remainingToRemove <= 0) break;
+            
+            if (card.name == requiredCard.name && 
+                card.rarity == requiredCard.rarity &&
+                card.quantity > 0) {
+                int toRemove = std::min(remainingToRemove, card.quantity);
+                for (int i = 0; i < toRemove; ++i) {
+                    inventory.removeCard(requiredCard.name, requiredCard.rarity);
+                }
+                remainingToRemove -= toRemove;
+            }
+        }
+        
+        // If still need more, remove from cards with same name but different rarity
+        if (remainingToRemove > 0) {
+            cards = inventory.getCards(); // Refresh the list
+            for (auto& card : cards) {
+                if (remainingToRemove <= 0) break;
+                
+                if (card.name == requiredCard.name && card.quantity > 0) {
+                    int toRemove = std::min(remainingToRemove, card.quantity);
+                    for (int i = 0; i < toRemove; ++i) {
+                        inventory.removeCard(card.name, card.rarity);
+                    }
+                    remainingToRemove -= toRemove;
+                }
+            }
         }
     }
 }
@@ -277,13 +309,26 @@ void CraftingSystem::loadRecipesFromDataManager(const DataManagement::GameDataMa
         std::vector<std::pair<Card, int>> ingredients;
         
         for (const auto& ingredient : recipeData.ingredients) {
-            // Create card from material name - we'll need to find the material data
-            const auto* materialData = dataManager.findMaterial(ingredient.first, 1); // Default to rarity 1
+            // Try to find the material with any rarity level
+            const DataManagement::MaterialData* materialData = nullptr;
+            
+            // Search through all materials to find one with matching name
+            const auto& allMaterials = dataManager.getMaterials();
+            for (const auto& material : allMaterials) {
+                if (material.name == ingredient.first) {
+                    materialData = &material;
+                    break; // Take the first match (could be improved to prefer lower rarity)
+                }
+            }
+            
             if (materialData) {
                 Card ingredientCard = materialData->toCard();
+                // Override quantity with the required amount
+                ingredientCard.quantity = ingredient.second;
                 ingredients.push_back({ingredientCard, ingredient.second});
             } else {
                 // Fallback: create a basic card
+                std::cout << "Warning: Material '" << ingredient.first << "' not found in materials database, creating fallback" << std::endl;
                 Card ingredientCard(ingredient.first, 1, CardType::MISC, ingredient.second);
                 ingredients.push_back({ingredientCard, ingredient.second});
             }
