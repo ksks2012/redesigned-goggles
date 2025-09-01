@@ -10,28 +10,32 @@ Controller::Controller(Inventory& inv, View& v, CraftingSystem& crafting)
 void Controller::handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-            case SDL_QUIT:
-                running = false;
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    handleMouseDown(event.button.x, event.button.y);
-                }
-                break;
-            case SDL_MOUSEMOTION:
-                mouseX = event.motion.x;
-                mouseY = event.motion.y;
-                break;
-            case SDL_MOUSEBUTTONUP:
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    selectedCard = nullptr;
-                }
-                break;
-            case SDL_KEYDOWN:
-                handleKeyDown(event.key.keysym.sym);
-                break;
-        }
+        handleEvent(event);
+    }
+}
+
+void Controller::handleEvent(SDL_Event& event) {
+    switch (event.type) {
+        case SDL_QUIT:
+            running = false;
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                handleMouseDown(event.button.x, event.button.y);
+            }
+            break;
+        case SDL_MOUSEMOTION:
+            mouseX = event.motion.x;
+            mouseY = event.motion.y;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                selectedCard = nullptr;
+            }
+            break;
+        case SDL_KEYDOWN:
+            handleKeyDown(event.key.keysym.sym);
+            break;
     }
 }
 
@@ -50,7 +54,8 @@ void Controller::organizeInventory() {
     std::uniform_int_distribution<> nameDist(0, Constants::CARD_NAMES.size() - 1);
 
     while (running) {
-        {
+        // Check if organizeInventory is enabled before processing
+        if (organizeInventoryEnabled) {
             std::lock_guard<std::mutex> lock(mutex);
             std::vector<Card> newCards;
             for (const auto& card : inventory.getCards()) {
@@ -240,4 +245,16 @@ void Controller::craftSelectedRecipe(const Recipe& recipe) {
     } else {
         std::cout << "Crafting failed: " << result.message << std::endl;
     }
+}
+
+void Controller::pauseOrganizeInventory() {
+    std::lock_guard<std::mutex> lock(mutex);
+    organizeInventoryEnabled = false;
+    std::cout << "Inventory organization paused for editor mode" << std::endl;
+}
+
+void Controller::resumeOrganizeInventory() {
+    std::lock_guard<std::mutex> lock(mutex);
+    organizeInventoryEnabled = true;
+    std::cout << "Inventory organization resumed" << std::endl;
 }

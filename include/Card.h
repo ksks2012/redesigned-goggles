@@ -54,6 +54,12 @@ struct Card {
         return (it != attributes.end()) ? it->second : 0.0f;
     }
 
+    // Get attribute value with custom default
+    float getAttribute(AttributeType attrType, float defaultValue) const {
+        auto it = attributes.find(attrType);
+        return (it != attributes.end()) ? it->second : defaultValue;
+    }
+
     // Check if attribute exists
     bool hasAttribute(AttributeType attrType) const {
         return attributes.find(attrType) != attributes.end();

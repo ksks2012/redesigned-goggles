@@ -11,12 +11,17 @@ class Controller {
 public:
     Controller(Inventory& inv, View& v, CraftingSystem& crafting);
     void handleEvents();
+    void handleEvent(SDL_Event& event); // Handle individual event
     bool isRunning() const;
     void updateView();
     void organizeInventory();
     
     void setSaveCallback(std::function<bool()> saveCallback);
     void setLoadCallback(std::function<bool()> loadCallback);
+    
+    // Editor mode control for organizeInventory
+    void pauseOrganizeInventory();
+    void resumeOrganizeInventory();
 
 private:
     Inventory& inventory;
@@ -26,6 +31,7 @@ private:
     int mouseX = 0, mouseY = 0;
     bool running;
     bool showCraftingPanel = false;
+    bool organizeInventoryEnabled = true; // Control flag for organizeInventory
     std::mutex mutex;
     
     // Save/load callback functions
