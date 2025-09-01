@@ -60,11 +60,13 @@ Makefile
 # Logs
 *.log
 
-# Project Difine
-alchemist
+# Project Define
 **/lib/**
 **/var/**
+**/summary/**
 *.ttf
 *.json
 
 # Executable files
+Survive
+SurviveTests
