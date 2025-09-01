@@ -134,6 +134,10 @@ private:
         auto recipeCmd = std::make_shared<RecipeCommandHandler>(ui_, dataService_, gameStateService_);
         registerCommand(recipeCmd);
         
+        // Event command
+        auto eventCmd = std::make_shared<EventCommandHandler>(ui_, dataService_, gameStateService_);
+        registerCommand(eventCmd);
+        
         // Add more commands here as needed...
     }
     

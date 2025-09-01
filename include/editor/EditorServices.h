@@ -216,6 +216,26 @@ public:
         return dataManager_.getEvents();
     }
     
+    const DataManagement::EventData* findEvent(const std::string& id) const override {
+        const auto& events = dataManager_.getEvents();
+        for (const auto& event : events) {
+            if (event.id == id) {
+                return &event;
+            }
+        }
+        return nullptr;
+    }
+    
+    DataManagement::EventData* findEvent(const std::string& id) override {
+        auto& events = const_cast<std::vector<DataManagement::EventData>&>(dataManager_.getEvents());
+        for (auto& event : events) {
+            if (event.id == id) {
+                return &event;
+            }
+        }
+        return nullptr;
+    }
+    
     bool addEvent(const DataManagement::EventData& event) override {
         auto events = dataManager_.getEvents();
         events.push_back(event);
@@ -223,11 +243,11 @@ public:
         return true;
     }
     
-    bool removeEvent(const std::string& name) override {
+    bool removeEvent(const std::string& id) override {
         auto events = dataManager_.getEvents();
         auto it = std::find_if(events.begin(), events.end(),
                               [&](const DataManagement::EventData& e) {
-                                  return e.name == name;
+                                  return e.id == id;
                               });
         
         if (it != events.end()) {

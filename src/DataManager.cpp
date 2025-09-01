@@ -527,8 +527,8 @@ bool GameDataManager::applyToInventory(Inventory& inventory) const {
 }
 
 bool GameDataManager::applyToCraftingSystem(CraftingSystem& craftingSystem) const {
-    // This would require extending CraftingSystem to accept recipe data
-    // For now, we'll log the action
+    // Load recipes from this DataManager into the CraftingSystem
+    craftingSystem.loadRecipesFromDataManager(*this);
     std::cout << "Applied " << recipes.size() << " recipes to crafting system" << std::endl;
     return true;
 }
@@ -684,8 +684,13 @@ void GameDataManager::createDefaultEvents() {
     
     // Resource discovery event
     EventData discovery;
+    discovery.id = "resource_discovery";
     discovery.name = "Resource Discovery";
     discovery.description = "Found useful materials while exploring";
+    discovery.type = "discovery";
+    discovery.triggerCondition = "random_exploration";
+    discovery.isActive = true;
+    discovery.effects = {"Add Wood x2", "Add Food x1"};
     discovery.rewardMaterials = {"Wood", "Food"};
     discovery.penaltyMaterials = {};
     discovery.probability = 0.3f;
@@ -693,8 +698,13 @@ void GameDataManager::createDefaultEvents() {
     
     // Medical emergency event
     EventData emergency;
+    emergency.id = "medical_emergency";
     emergency.name = "Medical Emergency";
     emergency.description = "Team member injured, need medical supplies";
+    emergency.type = "emergency";
+    emergency.triggerCondition = "random_combat";
+    emergency.isActive = true;
+    emergency.effects = {"Remove Bandage x1", "Damage Player 10"};
     emergency.rewardMaterials = {};
     emergency.penaltyMaterials = {"Bandage"};
     emergency.probability = 0.15f;
@@ -702,8 +712,13 @@ void GameDataManager::createDefaultEvents() {
     
     // Trader encounter
     EventData trader;
+    trader.id = "trader_encounter";
     trader.name = "Trader Encounter";
     trader.description = "Met a traveling trader willing to exchange goods";
+    trader.type = "encounter";
+    trader.triggerCondition = "random_travel";
+    trader.isActive = true;
+    trader.effects = {"Trade Wood for Food"};
     trader.rewardMaterials = {"Food"};
     trader.penaltyMaterials = {"Wood"};
     trader.probability = 0.2f;
@@ -850,9 +865,19 @@ bool GameDataManager::parseEventsJson(const std::string& jsonContent) {
             
             for (const auto& eventJson : j["events"]) {
                 EventData event;
+                event.id = eventJson.value("id", "");
                 event.name = eventJson["name"];
                 event.description = eventJson["description"];
+                event.type = eventJson.value("type", "");
+                event.triggerCondition = eventJson.value("trigger_condition", "");
+                event.isActive = eventJson.value("is_active", true);
                 event.probability = eventJson["probability"];
+                
+                if (eventJson.contains("effects") && eventJson["effects"].is_array()) {
+                    for (const auto& effect : eventJson["effects"]) {
+                        event.effects.push_back(effect);
+                    }
+                }
                 
                 if (eventJson.contains("reward_materials") && eventJson["reward_materials"].is_array()) {
                     for (const auto& reward : eventJson["reward_materials"]) {
@@ -951,8 +976,13 @@ std::string GameDataManager::generateEventsJson() const {
     
     for (const auto& event : events) {
         json eventJson;
+        eventJson["id"] = event.id;
         eventJson["name"] = event.name;
         eventJson["description"] = event.description;
+        eventJson["type"] = event.type;
+        eventJson["trigger_condition"] = event.triggerCondition;
+        eventJson["is_active"] = event.isActive;
+        eventJson["effects"] = event.effects;
         eventJson["probability"] = event.probability;
         eventJson["reward_materials"] = event.rewardMaterials;
         eventJson["penalty_materials"] = event.penaltyMaterials;

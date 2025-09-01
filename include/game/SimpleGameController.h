@@ -1,7 +1,6 @@
 #ifndef SIMPLE_GAME_CONTROLLER_H
 #define SIMPLE_GAME_CONTROLLER_H
 
-#include "game/GameInterfaces.h"
 #include "SDLManager.h"
 #include "Inventory.h"
 #include "CraftingSystem.h"
@@ -17,13 +16,19 @@
 #include <thread>
 #include <iostream>
 
+// Forward declarations
+namespace DataManagement {
+    class GameDataManager;
+}
+
 namespace GameSystem {
 
 /**
  * Simplified Game Controller with better dependency management
  * Follows SOLID principles while avoiding circular dependencies
+ * Removed complex interface dependencies for simplicity
  */
-class SimpleGameController : public IGame {
+class SimpleGameController {
 private:
     // Core game components
     std::unique_ptr<SDLManager> sdlManager_;
@@ -74,8 +79,8 @@ public:
         cleanup();
     }
     
-    // IGameLoop interface implementation
-    void run() override {
+    // Game loop interface
+    void run() {
         if (!running_) return;
         
         startBackgroundProcesses();
@@ -88,15 +93,15 @@ public:
         shutdown();
     }
     
-    void stop() override {
+    void stop() {
         running_ = false;
     }
     
-    bool isRunning() const override {
+    bool isRunning() const {
         return running_ && (controller_ ? controller_->isRunning() : false);
     }
     
-    void processFrame() override {
+    void processFrame() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             // Handle editor input first
@@ -122,45 +127,45 @@ public:
         imguiManager_->render();
     }
     
-    // IGameComponentsProvider interface implementation
-    Inventory& getInventory() override {
+    // Game component accessors
+    Inventory& getInventory() {
         return *inventory_;
     }
     
-    const Inventory& getInventory() const override {
+    const Inventory& getInventory() const {
         return *inventory_;
     }
     
-    CraftingSystem& getCraftingSystem() override {
+    CraftingSystem& getCraftingSystem() {
         return *craftingSystem_;
     }
     
-    const CraftingSystem& getCraftingSystem() const override {
+    const CraftingSystem& getCraftingSystem() const {
         return *craftingSystem_;
     }
     
-    Controller& getController() override {
+    Controller& getController() {
         return *controller_;
     }
     
-    const Controller& getController() const override {
+    const Controller& getController() const {
         return *controller_;
     }
     
-    DataManagement::GameDataManager& getDataManager() override {
+    DataManagement::GameDataManager& getDataManager() {
         return *globalDataManager_;
     }
     
     // Game operations
-    bool saveGame() override {
+    bool saveGame() {
         return saveManager_->saveGame(*inventory_);
     }
     
-    bool loadGame() override {
+    bool loadGame() {
         return saveManager_->loadGame(*inventory_);
     }
     
-    bool loadGameData() override {
+    bool loadGameData() {
         if (!globalDataManager_) {
             std::cerr << "Data manager not initialized" << std::endl;
             return false;
@@ -187,7 +192,7 @@ public:
         return true;
     }
     
-    bool saveGameData() override {
+    bool saveGameData() {
         if (!globalDataManager_) {
             std::cerr << "Data manager not initialized" << std::endl;
             return false;
@@ -196,7 +201,7 @@ public:
         return globalDataManager_->saveAllData();
     }
     
-    bool validateGameData() override {
+    bool validateGameData() {
         if (!globalDataManager_) {
             std::cerr << "Data manager not initialized" << std::endl;
             return false;

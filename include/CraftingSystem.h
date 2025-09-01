@@ -4,6 +4,11 @@
 #include <unordered_map>
 #include "Card.h"
 
+// Forward declarations
+namespace DataManagement {
+    class GameDataManager;
+}
+
 // Recipe structure
 struct Recipe {
     std::string id;                                    // Unique recipe identifier
@@ -49,8 +54,10 @@ public:
     bool isRecipeUnlocked(const std::string& recipeId) const;
     const Recipe* getRecipe(const std::string& recipeId) const;
     
-    // Initialize default recipes
+    // Initialize recipes
     void initializeDefaultRecipes();
+    void loadRecipesFromDataManager(const DataManagement::GameDataManager& dataManager);
+    void clearRecipes();
 
 private:
     std::vector<Recipe> recipes;

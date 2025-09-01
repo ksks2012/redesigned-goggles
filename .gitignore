@@ -71,3 +71,6 @@ Makefile
 # Executable files
 Survive
 SurviveTests
+testing_view_refactor
+testing_drag_functionality
+testing_card_detection
