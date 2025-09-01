@@ -1,56 +1,54 @@
 #pragma once
-#include "SDLManager.h"
-#include "Inventory.h"
-#include "View.h"
-#include "Controller.h"
-#include "SaveManager.h"
-#include "CraftingSystem.h"
-#include "ImGuiManager.h"
-#include "editor/GameEditor.h"
-#include "editor/GameData.h"
+#include "game/GameInterfaces.h"
+#include "game/SimpleGameController.h"
 #include "DataManager.h"
 #include <memory>
 
-class Game {
-public:
-    Game();
-    void run();
-    
-    bool saveGame();
-    bool loadGame();
-    
-    // Data management and version control
-    bool loadGameData();
-    bool saveGameData() const;
-    bool validateGameData() const;
-    
-    // Provide access to game data for editor
-    Inventory& getInventory() { return inventory; }
-    const Inventory& getInventory() const { return inventory; }
-    CraftingSystem& getCraftingSystem() { return craftingSystem; }
-    const CraftingSystem& getCraftingSystem() const { return craftingSystem; }
-    Controller& getController() { return controller; }
-    const Controller& getController() const { return controller; }
-    DataManagement::GameDataManager& getDataManager() { return *globalDataManager; }
-
+/**
+ * Refactored Game class
+ * Now follows SOLID principles and uses dependency injection
+ * Acts as a facade for the new modular game system
+ * 
+ * Architecture:
+ * - Follows Facade Pattern - provides simple interface to complex subsystem
+ * - Follows Dependency Injection - uses GameController with injected dependencies
+ * - Follows Single Responsibility - only handles game lifecycle coordination
+ */
+class Game : public GameSystem::IGame {
 private:
-    SDLManager sdlManager;
-    Inventory inventory;
-    CraftingSystem craftingSystem;
-    View view;
-    Controller controller;
-    SaveManager saveManager;
+    std::unique_ptr<GameSystem::SimpleGameController> gameController_;
     
-    // Editor system
-    ImGuiManager imguiManager;
-    std::unique_ptr<GameEditor> gameEditor;
-    std::unique_ptr<GameDataManager> dataManager;
+public:
+    /**
+     * Constructor - creates game with dependency injection
+     * Follows Dependency Injection Pattern
+     */
+    Game();
     
-    // Global data management system
-    std::unique_ptr<DataManagement::GameDataManager> globalDataManager;
+    /**
+     * Destructor - cleanup resources
+     */
+    ~Game() = default;
     
-    void initializeDefaultGame();
-    void initializeEditor();
-    void initializeDataSystem();
-    void handleEditorInput(SDL_Event& event);
+    // IGameLoop interface implementation
+    void run() override;
+    void stop() override;
+    bool isRunning() const override;
+    void processFrame() override;
+    
+    // IGameComponentsProvider interface implementation
+    Inventory& getInventory() override;
+    const Inventory& getInventory() const override;
+    CraftingSystem& getCraftingSystem() override;
+    const CraftingSystem& getCraftingSystem() const override;
+    Controller& getController() override;
+    const Controller& getController() const override;
+    DataManagement::GameDataManager& getDataManager() override;
+    
+    // Game operations
+    bool saveGame() override;
+    bool loadGame() override;
+    bool loadGameData() override;
+    bool saveGameData() override;
+    bool validateGameData() override;
 };

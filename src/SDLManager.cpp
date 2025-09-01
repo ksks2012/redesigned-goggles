@@ -2,6 +2,14 @@
 #include <stdexcept>
 
 SDLManager::SDLManager() {
+    init();
+}
+
+SDLManager::~SDLManager() {
+    cleanup();
+}
+
+void SDLManager::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
     }
@@ -19,10 +27,15 @@ SDLManager::SDLManager() {
     font = TTF_OpenFont("./assets/font.ttf", 16);
     if (!font) {
         throw std::runtime_error("Font loading failed: " + std::string(TTF_GetError()));
-    }
+    }    
 }
 
-SDLManager::~SDLManager() {
+bool SDLManager::initialize() {
+    init();
+    return true;
+}
+
+void SDLManager::cleanup() {
     if (font) TTF_CloseFont(font);
     TTF_Quit();
     if (renderer) SDL_DestroyRenderer(renderer);
