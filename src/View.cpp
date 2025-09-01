@@ -9,8 +9,11 @@ View::View(SDLManager& sdl)
     createButtons();
     tooltip_ = std::make_unique<UITooltip>(sdlManager_);
     
-    // Initialize crafting panel (callback will be set later)
+    // Initialize crafting panel (no callbacks needed - pure presentation)
     craftingPanel_ = std::make_unique<UICraftingPanel>(sdlManager_);
+    
+    // Initialize UI areas for hit testing
+    initializeUIAreas();
 }
 
 void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
@@ -52,62 +55,63 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     // Render hints
     renderHints();
     
-    // Handle tooltip
-    handleTooltip(inventory, selectedCard, showCraftingPanel, mouseX, mouseY);
+    // Update and render tooltip
+    updateTooltip(inventory, selectedCard, showCraftingPanel, mouseX, mouseY);
     tooltip_->render();
     
     SDL_RenderPresent(sdlManager_.getRenderer());
 }
 
-void View::handleClick(int mouseX, int mouseY) {
-    // Handle button clicks
-    for (auto& button : buttons_) {
-        button->handleClick(mouseX, mouseY);
-    }
-    
-    // Handle crafting panel clicks
-    craftingPanel_->handleClick(mouseX, mouseY);
-}
-
-const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mouseY) {
-    for (auto& uiCard : cards_) {
-        if (uiCard->isPointInside(mouseX, mouseY)) {
-            return &uiCard->getCard();
+const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mouseY) const {
+    // Calculate card positions directly from inventory to avoid dependency on render state
+    int index = 0;
+    for (const auto& card : inventory.getCards()) {
+        int cardX = Constants::CARD_X;
+        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
+        
+        // Check if mouse is within card bounds
+        if (mouseX >= cardX && mouseX <= cardX + Constants::CARD_WIDTH && 
+            mouseY >= cardY && mouseY <= cardY + Constants::CARD_HEIGHT) {
+            return &card;
         }
+        
+        index++;
     }
     return nullptr;
 }
 
-void View::setButtonCallbacks(
-    std::function<void()> onAddCard,
-    std::function<void()> onRemoveCard,
-    std::function<void()> onExplore,
-    std::function<void()> onCraft) {
-    
-    onAddCard_ = onAddCard;
-    onRemoveCard_ = onRemoveCard;
-    onExplore_ = onExplore;
-    onCraft_ = onCraft;
-    
-    // Update button callbacks
-    if (buttons_.size() >= 4) {
-        buttons_[0]->setOnClick(onAddCard_);
-        buttons_[1]->setOnClick(onRemoveCard_);
-        buttons_[2]->setOnClick(onExplore_);
-        buttons_[3]->setOnClick(onCraft_);
+bool View::isPointInUIArea(int x, int y, const std::string& areaName) const {
+    auto it = uiAreas_.find(areaName);
+    if (it != uiAreas_.end()) {
+        const SDL_Rect& rect = it->second;
+        return (x >= rect.x && x < rect.x + rect.w && 
+                y >= rect.y && y < rect.y + rect.h);
     }
+    return false;
 }
 
-void View::setCraftingCallback(std::function<void(const Recipe&)> onRecipeCraft) {
-    if (craftingPanel_) {
-        craftingPanel_ = std::make_unique<UICraftingPanel>(sdlManager_, onRecipeCraft);
+int View::getClickedRecipeIndex(int mouseX, int mouseY) const {
+    if (!isCraftingPanelHovered(mouseX, mouseY)) {
+        return -1;
     }
+    
+    int recipesStartY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
+    int recipeIndex = (mouseY - recipesStartY) / Constants::RECIPE_ITEM_HEIGHT;
+    return recipeIndex;
+}
+
+bool View::isButtonHovered(const std::string& buttonName, int mouseX, int mouseY) const {
+    return isPointInUIArea(mouseX, mouseY, buttonName);
+}
+
+bool View::isCraftingPanelHovered(int mouseX, int mouseY) const {
+    return isPointInUIArea(mouseX, mouseY, "craftingPanel");
 }
 
 void View::createButtons() {
     buttons_.clear();
     
-    // Create buttons with their text and positions
+    // Create buttons without callbacks - pure presentation
     auto addButton = std::make_unique<UIButton>(
         Constants::BUTTON_TEXT_ADD, 
         Constants::BUTTON_X, Constants::BUTTON_Y_ADD,
@@ -147,6 +151,7 @@ void View::updateCards(const Inventory& inventory) {
     
     int index = 0;
     for (const auto& card : inventory.getCards()) {
+        // Cards are arranged vertically, starting from CARD_X (which acts as base Y coordinate)
         int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
         
         auto uiCard = std::make_unique<UICard>(card, Constants::CARD_X, cardY, sdlManager_);
@@ -185,8 +190,8 @@ void View::renderHints() {
     textRenderer.renderTextAt(Constants::HINT_EXIT, hintX, hintY + 3 * Constants::HINT_LINE_SPACING, Constants::TEXT_COLOR);
 }
 
-void View::handleTooltip(const Inventory& inventory, const Card* selectedCard, 
-                                  bool showCraftingPanel, int mouseX, int mouseY) {
+void View::updateTooltip(const Inventory& inventory, const Card* selectedCard, 
+                         bool showCraftingPanel, int mouseX, int mouseY) {
     // Show tooltip only when not dragging and crafting panel is not shown
     if (!selectedCard && !showCraftingPanel) {
         const Card* hoveredCard = getHoveredCard(inventory, mouseX, mouseY);
@@ -198,4 +203,34 @@ void View::handleTooltip(const Inventory& inventory, const Card* selectedCard,
     } else {
         tooltip_->hide();
     }
+}
+
+void View::initializeUIAreas() {
+    // Initialize UI area rectangles for hit testing
+    uiAreas_["addButton"] = {Constants::BUTTON_X, Constants::BUTTON_Y_ADD, 
+                            Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT};
+    
+    uiAreas_["removeButton"] = {Constants::BUTTON_X, Constants::BUTTON_Y_REMOVE,
+                               Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT};
+    
+    uiAreas_["exploreButton"] = {Constants::BUTTON_X, Constants::BUTTON_Y_EXPLORE,
+                                Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT};
+    
+    uiAreas_["craftButton"] = {Constants::BUTTON_X, Constants::BUTTON_Y_CRAFT,
+                              Constants::BUTTON_MIN_WIDTH, Constants::BUTTON_HEIGHT};
+    
+    uiAreas_["craftingPanel"] = {Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
+                                Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT};
+}
+
+SDL_Rect View::getButtonRect(const std::string& buttonName) const {
+    auto it = uiAreas_.find(buttonName);
+    if (it != uiAreas_.end()) {
+        return it->second;
+    }
+    return {0, 0, 0, 0};
+}
+
+SDL_Rect View::getCraftingPanelRect() const {
+    return getButtonRect("craftingPanel");
 }

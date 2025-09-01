@@ -44,6 +44,7 @@ set(SOURCES
     src/editor/GameData.cpp
     src/editor/GameEditor.cpp
     src/editor/ConsoleEditor.cpp
+    src/GameInputHandler.cpp
 )
 
 # Create executable
@@ -72,6 +73,7 @@ set(LIB_SOURCES
     src/editor/GameData.cpp
     src/editor/GameEditor.cpp
     src/editor/ConsoleEditor.cpp
+    src/GameInputHandler.cpp
 )
 
 add_library(SurviveLib STATIC ${LIB_SOURCES})
