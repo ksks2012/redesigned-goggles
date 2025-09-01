@@ -86,7 +86,8 @@ void Game::initializeEditor() {
     
     if (imguiManager.initialize(sdlManager.getWindow(), sdlManager.getRenderer())) {
         // Provide data manager to ImGuiManager
-        imguiManager.setDataManager(dataManager.get());
+        imguiManager.setDataManager(globalDataManager.get());
+        imguiManager.setGameInstance(this);
         
         // Set callback for editor mode changes to control organizeInventory
         imguiManager.setEditorModeCallback([this](bool editorMode) {

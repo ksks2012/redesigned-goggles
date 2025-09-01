@@ -4,11 +4,12 @@
 #include <SDL2/SDL.h>
 #include <memory>
 #include <functional>
+#include "DataManager.h"
 
 // Forward declarations
 struct ImGuiIO;
-class GameDataManager;
 class ConsoleEditor;
+class Game;
 
 /**
  * ImGui integration manager for SDL2
@@ -21,8 +22,14 @@ public:
     ImGuiManager();
     ~ImGuiManager();
 
-    // Initialize ImGui with SDL2 renderer
+        // Initialize ImGui manager
     bool initialize(SDL_Window* window, SDL_Renderer* renderer);
+    
+    // Set data manager for console editor
+    void setDataManager(DataManagement::GameDataManager* dataManager);
+    
+    // Set game instance for console editor syncing
+    void setGameInstance(Game* game);
     
     // Frame management
     void beginFrame(SDL_Window* window);
@@ -42,9 +49,6 @@ public:
     void setEditorMode(bool enabled) { editorMode_ = enabled; }
     bool isEditorMode() const { return editorMode_; }
     
-    // Console editor integration
-    void setDataManager(GameDataManager* dataManager);
-    
     // Editor mode change callback
     using EditorModeCallback = std::function<void(bool)>;
     void setEditorModeCallback(EditorModeCallback callback) { editorModeCallback_ = callback; }
@@ -55,7 +59,8 @@ private:
     ImGuiIO* io_;
     
     // Console editor as fallback
-    GameDataManager* dataManager_;
+    DataManagement::GameDataManager* dataManager_;
+    Game* gameInstance_;
     std::unique_ptr<ConsoleEditor> consoleEditor_;
     bool consoleEditorActive_;
     

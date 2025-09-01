@@ -1,9 +1,15 @@
 #ifndef CONSOLEEDITOR_H
 #define CONSOLEEDITOR_H
 
-#include "GameData.h"
+#include "DataManager.h"
 #include <string>
 #include <sstream>
+
+// Forward declarations
+class Game;
+class Inventory;
+class CraftingSystem;
+class Controller;
 
 /**
  * Console-based editor interface for game data management
@@ -12,13 +18,17 @@
  */
 class ConsoleEditor {
 public:
-    explicit ConsoleEditor(GameDataManager& dataManager);
+    explicit ConsoleEditor(DataManagement::GameDataManager& dataManager);
+    
+    // Set game instance for syncing
+    void setGameInstance(Game* game) { gameInstance_ = game; }
     
     // Main editor loop
     void run();
     
 private:
-    GameDataManager& dataManager_;
+    DataManagement::GameDataManager& dataManager_;
+    Game* gameInstance_;
     bool running_;
     
     // Main command handlers
@@ -34,21 +44,21 @@ private:
     void createMaterial();
     void editMaterial();
     void deleteMaterial();
-    void showMaterial(const std::string& id);
+    void showMaterial(const std::string& name, int rarity);
     
     // Recipe operations
     void listRecipes();
     void createRecipe();
     void editRecipe();
     void deleteRecipe();
-    void showRecipe(const std::string& name);
+    void showRecipe(const std::string& id);
     
     // Event operations
     void listEvents();
     void createEvent();
     void editEvent();
     void deleteEvent();
-    void showEvent(const std::string& id);
+    void showEvent(const std::string& name);
     
     // Data operations
     void validateData();

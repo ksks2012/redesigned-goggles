@@ -1,6 +1,7 @@
 #include "ImGuiManager.h"
-#include "editor/GameData.h"
+#include "DataManager.h"
 #include "editor/ConsoleEditor.h"
+#include "Game.h"
 #include <iostream>
 #include <thread>
 
@@ -10,7 +11,7 @@
 
 ImGuiManager::ImGuiManager() 
     : initialized_(false), editorMode_(false), io_(nullptr), 
-      dataManager_(nullptr), consoleEditor_(nullptr), consoleEditorActive_(false) {
+      dataManager_(nullptr), gameInstance_(nullptr), consoleEditor_(nullptr), consoleEditorActive_(false) {
 }
 
 ImGuiManager::~ImGuiManager() {
@@ -73,16 +74,25 @@ void ImGuiManager::shutdown() {
     initialized_ = false;
 }
 
+void ImGuiManager::setDataManager(DataManagement::GameDataManager* dataManager) {
+    dataManager_ = dataManager;
+}
+
+void ImGuiManager::setGameInstance(Game* game) {
+    gameInstance_ = game;
+    
+    // If console editor is already created, set the game instance
+    if (consoleEditor_) {
+        consoleEditor_->setGameInstance(game);
+    }
+}
+
 void ImGuiManager::setupStyle() {
     // Placeholder - would set up ImGui style here
 }
 
 void ImGuiManager::setupFonts() {
     // Placeholder - would load fonts here
-}
-
-void ImGuiManager::setDataManager(GameDataManager* dataManager) {
-    dataManager_ = dataManager;
 }
 
 void ImGuiManager::startConsoleEditor() {
@@ -108,6 +118,11 @@ void ImGuiManager::startConsoleEditor() {
         try {
             if (!consoleEditor_) {
                 consoleEditor_ = std::make_unique<ConsoleEditor>(*dataManager_);
+                
+                // Set game instance if available
+                if (gameInstance_) {
+                    consoleEditor_->setGameInstance(gameInstance_);
+                }
             }
             
             // Run the console editor

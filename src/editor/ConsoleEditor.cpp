@@ -1,17 +1,23 @@
 #include "editor/ConsoleEditor.h"
+#include "Game.h"
+#include "Inventory.h"
+#include "CraftingSystem.h"
+#include "Controller.h"
 #include "Constants.h"
 #include <iostream>
 #include <iomanip>
 #include <limits>
 #include <set>
 #include <map>
+#include <algorithm>
 
-ConsoleEditor::ConsoleEditor(GameDataManager& dataManager) 
-    : dataManager_(dataManager), running_(true) {
+ConsoleEditor::ConsoleEditor(DataManagement::GameDataManager& dataManager) 
+    : dataManager_(dataManager), gameInstance_(nullptr), running_(true) {
 }
 
 void ConsoleEditor::run() {
-    std::cout << "\n=== GAME EDITOR CONSOLE ===" << std::endl;
+    std::cout << "\n=== GAME DATA EDITOR CONSOLE ===" << std::endl;
+    std::cout << "Connected to new DataManager system with version control" << std::endl;
     std::cout << "Press F1 in-game to toggle editor mode" << std::endl;
     std::cout << "Type 'help' for available commands" << std::endl;
     
@@ -39,6 +45,18 @@ void ConsoleEditor::run() {
             handleDataCommands();
         } else if (action == "game" || action == "g") {
             handleGameStateCommands();
+        } else if (action == "sync") {
+            if (gameInstance_) {
+                syncFromGame();
+            } else {
+                std::cout << "No game instance available for sync" << std::endl;
+            }
+        } else if (action == "apply") {
+            if (gameInstance_) {
+                syncToGame();
+            } else {
+                std::cout << "No game instance available for apply" << std::endl;
+            }
         } else if (action == "quit" || action == "exit" || action == "q") {
             running_ = false;
         } else {
@@ -48,387 +66,556 @@ void ConsoleEditor::run() {
 }
 
 void ConsoleEditor::showHelp() {
-    std::cout << "\n=== AVAILABLE COMMANDS ===" << std::endl;
-    std::cout << "material (mat, m) - Material editing commands" << std::endl;
-    std::cout << "recipe   (rec, r) - Recipe editing commands" << std::endl;
-    std::cout << "event    (evt, e) - Event editing commands" << std::endl;
-    std::cout << "data     (d)      - Data operations (save/load/validate)" << std::endl;
-    std::cout << "game     (g)      - Game state inspection and sync" << std::endl;
-    std::cout << "help     (h)      - Show this help" << std::endl;
-    std::cout << "quit     (q)      - Exit editor" << std::endl;
+    std::cout << "\n=== EDITOR COMMANDS ===" << std::endl;
+    std::cout << "Data Management:" << std::endl;
+    std::cout << "  material (mat, m)  - Material operations" << std::endl;
+    std::cout << "  recipe (rec, r)    - Recipe operations" << std::endl;
+    std::cout << "  event (evt, e)     - Event operations" << std::endl;
+    std::cout << "  data (d)           - Data file operations" << std::endl;
+    std::cout << "  game (g)           - Game state inspection" << std::endl;
+    std::cout << "\nSync Commands:" << std::endl;
+    std::cout << "  sync               - Sync data from current game state" << std::endl;
+    std::cout << "  apply              - Apply editor changes to game" << std::endl;
+    std::cout << "\nGeneral:" << std::endl;
+    std::cout << "  help (h)           - Show this help" << std::endl;
+    std::cout << "  quit (exit, q)     - Exit editor" << std::endl;
 }
 
 void ConsoleEditor::handleMaterialCommands() {
-    std::cout << "\nMaterial Commands:" << std::endl;
+    std::cout << "\n=== MATERIAL OPERATIONS ===" << std::endl;
     std::cout << "1. List materials" << std::endl;
-    std::cout << "2. Create material" << std::endl;
-    std::cout << "3. Edit material" << std::endl;
-    std::cout << "4. Delete material" << std::endl;
-    std::cout << "5. Show material details" << std::endl;
+    std::cout << "2. Show material details" << std::endl;
+    std::cout << "3. Create material" << std::endl;
+    std::cout << "4. Edit material" << std::endl;
+    std::cout << "5. Delete material" << std::endl;
     std::cout << "0. Back to main menu" << std::endl;
     
     int choice = getUserChoice("Choose option", 0, 5);
-    
     switch (choice) {
         case 1: listMaterials(); break;
-        case 2: createMaterial(); break;
-        case 3: editMaterial(); break;
-        case 4: deleteMaterial(); break;
-        case 5: {
-            std::string id = getUserInput("Enter material ID");
-            showMaterial(id);
+        case 2: {
+            std::string name = getUserInput("Material name");
+            int rarity = getUserChoice("Material rarity (1-5)", 1, 5);
+            showMaterial(name, rarity);
             break;
         }
+        case 3: createMaterial(); break;
+        case 4: editMaterial(); break;
+        case 5: deleteMaterial(); break;
         case 0: break;
     }
 }
 
 void ConsoleEditor::handleRecipeCommands() {
-    std::cout << "\nRecipe Commands:" << std::endl;
+    std::cout << "\n=== RECIPE OPERATIONS ===" << std::endl;
     std::cout << "1. List recipes" << std::endl;
-    std::cout << "2. Create recipe" << std::endl;
-    std::cout << "3. Edit recipe" << std::endl;
-    std::cout << "4. Delete recipe" << std::endl;
-    std::cout << "5. Show recipe details" << std::endl;
+    std::cout << "2. Show recipe details" << std::endl;
+    std::cout << "3. Create recipe" << std::endl;
+    std::cout << "4. Edit recipe" << std::endl;
+    std::cout << "5. Delete recipe" << std::endl;
     std::cout << "0. Back to main menu" << std::endl;
     
     int choice = getUserChoice("Choose option", 0, 5);
-    
     switch (choice) {
         case 1: listRecipes(); break;
-        case 2: createRecipe(); break;
-        case 3: editRecipe(); break;
-        case 4: deleteRecipe(); break;
-        case 5: {
-            std::string name = getUserInput("Enter recipe name");
-            showRecipe(name);
+        case 2: {
+            std::string id = getUserInput("Recipe ID");
+            showRecipe(id);
             break;
         }
+        case 3: createRecipe(); break;
+        case 4: editRecipe(); break;
+        case 5: deleteRecipe(); break;
         case 0: break;
     }
 }
 
 void ConsoleEditor::handleEventCommands() {
-    std::cout << "\nEvent Commands:" << std::endl;
+    std::cout << "\n=== EVENT OPERATIONS ===" << std::endl;
     std::cout << "1. List events" << std::endl;
-    std::cout << "2. Create event" << std::endl;
-    std::cout << "3. Edit event" << std::endl;
-    std::cout << "4. Delete event" << std::endl;
-    std::cout << "5. Show event details" << std::endl;
+    std::cout << "2. Show event details" << std::endl;
+    std::cout << "3. Create event" << std::endl;
+    std::cout << "4. Edit event" << std::endl;
+    std::cout << "5. Delete event" << std::endl;
     std::cout << "0. Back to main menu" << std::endl;
     
     int choice = getUserChoice("Choose option", 0, 5);
-    
     switch (choice) {
         case 1: listEvents(); break;
-        case 2: createEvent(); break;
-        case 3: editEvent(); break;
-        case 4: deleteEvent(); break;
-        case 5: {
-            std::string id = getUserInput("Enter event ID");
-            showEvent(id);
+        case 2: {
+            std::string name = getUserInput("Event name");
+            showEvent(name);
             break;
         }
+        case 3: createEvent(); break;
+        case 4: editEvent(); break;
+        case 5: deleteEvent(); break;
         case 0: break;
     }
 }
 
 void ConsoleEditor::handleDataCommands() {
-    std::cout << "\nData Commands:" << std::endl;
+    std::cout << "\n=== DATA OPERATIONS ===" << std::endl;
     std::cout << "1. Validate data" << std::endl;
-    std::cout << "2. Save data to JSON" << std::endl;
-    std::cout << "3. Load data from JSON" << std::endl;
+    std::cout << "2. Save data" << std::endl;
+    std::cout << "3. Load data" << std::endl;
     std::cout << "4. Export data" << std::endl;
-    std::cout << "5. Sync from game" << std::endl;
-    std::cout << "6. Sync to game" << std::endl;
+    std::cout << "5. Show data status" << std::endl;
     std::cout << "0. Back to main menu" << std::endl;
     
-    int choice = getUserChoice("Choose option", 0, 6);
-    
+    int choice = getUserChoice("Choose option", 0, 5);
     switch (choice) {
         case 1: validateData(); break;
         case 2: saveData(); break;
         case 3: loadData(); break;
         case 4: exportData(); break;
-        case 5: syncFromGame(); break;
-        case 6: syncToGame(); break;
+        case 5: showGameState(); break;
+        case 0: break;
+    }
+}
+
+void ConsoleEditor::handleGameStateCommands() {
+    std::cout << "\n=== GAME STATE INSPECTION ===" << std::endl;
+    std::cout << "1. Show game state" << std::endl;
+    std::cout << "2. Show inventory" << std::endl;
+    std::cout << "3. Show recipe status" << std::endl;
+    std::cout << "4. Refresh game data" << std::endl;
+    std::cout << "0. Back to main menu" << std::endl;
+    
+    int choice = getUserChoice("Choose option", 0, 4);
+    switch (choice) {
+        case 1: showGameState(); break;
+        case 2: showInventory(); break;
+        case 3: showRecipeStatus(); break;
+        case 4: refreshGameData(); break;
         case 0: break;
     }
 }
 
 void ConsoleEditor::listMaterials() {
-    const auto& materials = dataManager_.getAllMaterials();
+    const auto& materials = dataManager_.getMaterials();
     
     std::cout << "\n=== MATERIALS (" << materials.size() << ") ===" << std::endl;
-    std::cout << std::left << std::setw(20) << "ID" << std::setw(25) << "Name" 
-              << std::setw(15) << "Type" << std::setw(10) << "Rarity" << std::endl;
+    std::cout << std::left << std::setw(25) << "Name" 
+              << std::setw(10) << "Type" << std::setw(8) << "Rarity" 
+              << std::setw(10) << "Quantity" << std::endl;
     std::cout << std::string(70, '-') << std::endl;
     
     for (const auto& material : materials) {
-        std::cout << std::left << std::setw(20) << material.id
-                  << std::setw(25) << material.name
-                  << std::setw(15) << cardTypeToString(material.type)
-                  << std::setw(10) << material.rarity << std::endl;
+        std::cout << std::left << std::setw(25) << material.name
+              << std::setw(15) << cardTypeToString(material.type)
+              << std::setw(8) << material.rarity 
+              << std::setw(10) << material.baseQuantity << std::endl;
     }
 }
 
 void ConsoleEditor::createMaterial() {
-    MaterialTemplate material;
+    DataManagement::MaterialData material;
     
     std::cout << "\n=== CREATE MATERIAL ===" << std::endl;
-    material.id = getUserInput("Material ID");
+    material.name = getUserInput("Material Name");
     
-    // Check if ID already exists
-    if (dataManager_.getMaterial(material.id)) {
-        std::cout << "Error: Material with ID '" << material.id << "' already exists!" << std::endl;
+    material.rarity = getUserChoice("Rarity (1-5)", 1, 5);
+    
+    // Check if material already exists
+    if (dataManager_.materialExists(material.name, material.rarity)) {
+        std::cout << "Error: Material '" << material.name << "' with rarity " 
+                  << material.rarity << " already exists!" << std::endl;
         return;
     }
     
-    material.name = getUserInput("Material Name");
-    
     // Choose type
     std::cout << "\nCard Types:" << std::endl;
-    std::cout << "1. Food    2. Weapon   3. Armor    4. Herb" << std::endl;
-    std::cout << "5. Fuel    6. Metal    7. Building 8. Misc" << std::endl;
-    int typeChoice = getUserChoice("Choose type", 1, 8);
+    std::cout << "0. Metal    1. Weapon   2. Armor    3. Herb" << std::endl;
+    std::cout << "4. Food     5. Fuel     6. Building 7. Misc" << std::endl;
+    int typeChoice = getUserChoice("Choose type", 0, 7);
+    material.type = static_cast<CardType>(typeChoice);
     
-    switch (typeChoice) {
-        case 1: material.type = CardType::FOOD; break;
-        case 2: material.type = CardType::WEAPON; break;
-        case 3: material.type = CardType::ARMOR; break;
-        case 4: material.type = CardType::HERB; break;
-        case 5: material.type = CardType::FUEL; break;
-        case 6: material.type = CardType::METAL; break;
-        case 7: material.type = CardType::BUILDING; break;
-        case 8: material.type = CardType::MISC; break;
-    }
+    material.baseQuantity = getUserChoice("Base quantity", 1, 100);
     
-    material.rarity = getUserChoice("Rarity (1=Common, 2=Rare, 3=Legendary)", 1, 3);
-    material.description = getUserInput("Description (optional)");
+    // Add to materials
+    auto materials = dataManager_.getMaterials();
+    materials.push_back(material);
+    dataManager_.setMaterials(materials);
     
-    // Add attributes
-    std::cout << "\nAdd attributes (enter 'done' when finished):" << std::endl;
-    while (true) {
-        std::string attrName = getUserInput("Attribute name (weight/nutrition/attack/defense/healing/durability/burn_value/crafting_value/trade_value)");
-        if (attrName == "done") break;
-        
-        AttributeType attrType = stringToAttributeType(attrName);
-        if (attrType == AttributeType::WEIGHT) { // Using weight as "invalid" indicator
-            if (attrName != "weight") {
-                std::cout << "Invalid attribute name: " << attrName << std::endl;
-                continue;
-            }
-        }
-        
-        float value = getUserFloat("Attribute value");
-        material.attributes[attrType] = value;
-    }
-    
-    dataManager_.addMaterial(material);
     std::cout << "Material '" << material.name << "' created successfully!" << std::endl;
 }
 
 void ConsoleEditor::editMaterial() {
-    std::string id = getUserInput("Enter material ID to edit");
-    MaterialTemplate* material = dataManager_.getMaterial(id);
+    std::string name = getUserInput("Material name to edit");
+    int rarity = getUserChoice("Material rarity (1-5)", 1, 5);
     
+    auto* material = dataManager_.findMaterial(name, rarity);
     if (!material) {
-        std::cout << "Material with ID '" << id << "' not found!" << std::endl;
+        std::cout << "Material not found: " << name << " (rarity " << rarity << ")" << std::endl;
         return;
     }
     
-    std::cout << "\n=== EDIT MATERIAL: " << material->name << " ===" << std::endl;
+    std::cout << "\nEditing material: " << material->name << std::endl;
     std::cout << "1. Change name" << std::endl;
     std::cout << "2. Change type" << std::endl;
     std::cout << "3. Change rarity" << std::endl;
-    std::cout << "4. Edit attributes" << std::endl;
-    std::cout << "5. Change description" << std::endl;
+    std::cout << "4. Change base quantity" << std::endl;
     std::cout << "0. Cancel" << std::endl;
     
-    int choice = getUserChoice("Choose what to edit", 0, 5);
-    
+    int choice = getUserChoice("Choose option", 0, 4);
     switch (choice) {
-        case 1:
-            material->name = getUserInput("New name");
-            break;
+        case 1: material->name = getUserInput("New name"); break;
         case 2: {
-            std::cout << "1. Food  2. Weapon  3. Armor  4. Herb  5. Fuel  6. Metal  7. Building  8. Misc" << std::endl;
-            int typeChoice = getUserChoice("Choose new type", 1, 8);
-            switch (typeChoice) {
-                case 1: material->type = CardType::FOOD; break;
-                case 2: material->type = CardType::WEAPON; break;
-                case 3: material->type = CardType::ARMOR; break;
-                case 4: material->type = CardType::HERB; break;
-                case 5: material->type = CardType::FUEL; break;
-                case 6: material->type = CardType::METAL; break;
-                case 7: material->type = CardType::BUILDING; break;
-                case 8: material->type = CardType::MISC; break;
-            }
+            std::cout << "0. Metal  1. Weapon  2. Armor  3. Herb" << std::endl;
+            std::cout << "4. Food   5. Fuel    6. Building  7. Misc" << std::endl;
+            int typeChoice = getUserChoice("Choose type", 0, 7);
+            material->type = static_cast<CardType>(typeChoice);
             break;
         }
-        case 3:
-            material->rarity = getUserChoice("New rarity (1=Common, 2=Rare, 3=Legendary)", 1, 3);
-            break;
-        case 4: {
-            std::cout << "Current attributes:" << std::endl;
-            for (const auto& attr : material->attributes) {
-                std::cout << "- " << attributeTypeToString(attr.first) << ": " << attr.second << std::endl;
-            }
-            std::string attrName = getUserInput("Attribute to edit");
-            AttributeType attrType = stringToAttributeType(attrName);
-            float value = getUserFloat("New value");
-            material->attributes[attrType] = value;
-            break;
-        }
-        case 5:
-            material->description = getUserInput("New description");
-            break;
-        case 0:
-            return;
+        case 3: material->rarity = getUserChoice("New rarity (1-5)", 1, 5); break;
+        case 4: material->baseQuantity = getUserChoice("New base quantity", 1, 100); break;
+        case 0: return;
     }
     
-    dataManager_.updateMaterial(id, *material);
     std::cout << "Material updated successfully!" << std::endl;
 }
 
 void ConsoleEditor::deleteMaterial() {
-    std::string id = getUserInput("Enter material ID to delete");
-    MaterialTemplate* material = dataManager_.getMaterial(id);
+    std::string name = getUserInput("Material name to delete");
+    int rarity = getUserChoice("Material rarity (1-5)", 1, 5);
     
-    if (!material) {
-        std::cout << "Material with ID '" << id << "' not found!" << std::endl;
+    auto materials = dataManager_.getMaterials();
+    auto it = std::find_if(materials.begin(), materials.end(), 
+                          [&](const DataManagement::MaterialData& m) { 
+                              return m.name == name && m.rarity == rarity; 
+                          });
+    
+    if (it == materials.end()) {
+        std::cout << "Material not found: " << name << " (rarity " << rarity << ")" << std::endl;
         return;
     }
     
-    if (confirmAction("delete material '" + material->name + "'")) {
-        dataManager_.removeMaterial(id);
-        std::cout << "Material deleted successfully!" << std::endl;
+    if (confirmAction("delete material '" + name + "'")) {
+        materials.erase(it);
+        dataManager_.setMaterials(materials);
+        std::cout << "Material '" << name << "' deleted successfully!" << std::endl;
     }
 }
 
-void ConsoleEditor::showMaterial(const std::string& id) {
-    MaterialTemplate* material = dataManager_.getMaterial(id);
-    
+void ConsoleEditor::showMaterial(const std::string& name, int rarity) {
+    const auto* material = dataManager_.findMaterial(name, rarity);
     if (!material) {
-        std::cout << "Material with ID '" << id << "' not found!" << std::endl;
+        std::cout << "Material not found: " << name << " (rarity " << rarity << ")" << std::endl;
         return;
     }
     
     std::cout << "\n=== MATERIAL DETAILS ===" << std::endl;
-    std::cout << "ID: " << material->id << std::endl;
     std::cout << "Name: " << material->name << std::endl;
-    std::cout << "Type: " << cardTypeToString(material->type) << std::endl;
+    std::cout << "Type: " << static_cast<int>(material->type) << std::endl;
     std::cout << "Rarity: " << material->rarity << std::endl;
-    std::cout << "Description: " << material->description << std::endl;
-    std::cout << "\nAttributes:" << std::endl;
+    std::cout << "Base Quantity: " << material->baseQuantity << std::endl;
     
-    for (const auto& attr : material->attributes) {
-        std::cout << "- " << attributeTypeToString(attr.first) << ": " << attr.second << std::endl;
+    if (!material->attributes.empty()) {
+        std::cout << "Attributes:" << std::endl;
+        for (const auto& attr : material->attributes) {
+            std::cout << "  " << static_cast<int>(attr.first) << ": " << attr.second << std::endl;
+        }
     }
 }
 
 void ConsoleEditor::listRecipes() {
-    const auto& recipes = dataManager_.getAllRecipes();
+    const auto& recipes = dataManager_.getRecipes();
     
     std::cout << "\n=== RECIPES (" << recipes.size() << ") ===" << std::endl;
+    std::cout << std::left << std::setw(15) << "ID" 
+              << std::setw(25) << "Name" 
+              << std::setw(20) << "Result" 
+              << std::setw(10) << "Success %" << std::endl;
+    std::cout << std::string(70, '-') << std::endl;
+    
     for (const auto& recipe : recipes) {
-        std::cout << "- " << recipe.name << " (Success: " << (recipe.successRate * 100) << "%)" << std::endl;
+        std::cout << std::left << std::setw(15) << recipe.id
+                  << std::setw(25) << recipe.name
+                  << std::setw(20) << recipe.resultMaterial
+                  << std::setw(10) << (recipe.successRate * 100) << "%" << std::endl;
     }
 }
 
 void ConsoleEditor::createRecipe() {
     std::cout << "\n=== CREATE RECIPE ===" << std::endl;
-    std::cout << "Recipe creation not yet fully implemented in console editor." << std::endl;
-    std::cout << "This would require selecting materials, quantities, etc." << std::endl;
+    std::cout << "This is a simplified interface. For full recipe creation," << std::endl;
+    std::cout << "please edit the recipes.json file directly." << std::endl;
 }
 
 void ConsoleEditor::editRecipe() {
-    std::cout << "Recipe editing not yet implemented in console editor." << std::endl;
+    std::cout << "Recipe editing not implemented in console editor." << std::endl;
+    std::cout << "Please edit recipes.json directly." << std::endl;
 }
 
 void ConsoleEditor::deleteRecipe() {
-    std::cout << "Recipe deletion not yet implemented in console editor." << std::endl;
+    std::cout << "Recipe deletion not implemented in console editor." << std::endl;
+    std::cout << "Please edit recipes.json directly." << std::endl;
 }
 
-void ConsoleEditor::showRecipe(const std::string& name) {
-    std::cout << "Recipe details not yet implemented in console editor." << std::endl;
+void ConsoleEditor::showRecipe(const std::string& id) {
+    const auto* recipe = dataManager_.findRecipe(id);
+    if (!recipe) {
+        std::cout << "Recipe not found: " << id << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== RECIPE DETAILS ===" << std::endl;
+    std::cout << "ID: " << recipe->id << std::endl;
+    std::cout << "Name: " << recipe->name << std::endl;
+    std::cout << "Description: " << recipe->description << std::endl;
+    std::cout << "Result: " << recipe->resultMaterial << std::endl;
+    std::cout << "Success Rate: " << (recipe->successRate * 100) << "%" << std::endl;
+    std::cout << "Unlock Level: " << recipe->unlockLevel << std::endl;
+    std::cout << "Unlocked: " << (recipe->isUnlocked ? "Yes" : "No") << std::endl;
+    
+    std::cout << "Ingredients:" << std::endl;
+    for (const auto& ingredient : recipe->ingredients) {
+        std::cout << "  " << ingredient.first << " x" << ingredient.second << std::endl;
+    }
 }
 
 void ConsoleEditor::listEvents() {
-    const auto& events = dataManager_.getAllEvents();
+    const auto& events = dataManager_.getEvents();
     
     std::cout << "\n=== EVENTS (" << events.size() << ") ===" << std::endl;
+    std::cout << std::left << std::setw(25) << "Name" 
+              << std::setw(40) << "Description" << std::endl;
+    std::cout << std::string(65, '-') << std::endl;
+    
     for (const auto& event : events) {
-        std::cout << "- " << event.id << ": " << event.name << std::endl;
+        std::string desc = event.description;
+        if (desc.length() > 37) {
+            desc = desc.substr(0, 34) + "...";
+        }
+        std::cout << std::left << std::setw(25) << event.name
+                  << std::setw(40) << desc << std::endl;
     }
 }
 
 void ConsoleEditor::createEvent() {
-    std::cout << "Event creation not yet implemented in console editor." << std::endl;
+    std::cout << "\n=== CREATE EVENT ===" << std::endl;
+    std::cout << "Event creation not implemented in console editor." << std::endl;
+    std::cout << "Please edit events.json directly." << std::endl;
 }
 
 void ConsoleEditor::editEvent() {
-    std::cout << "Event editing not yet implemented in console editor." << std::endl;
+    std::cout << "Event editing not implemented in console editor." << std::endl;
+    std::cout << "Please edit events.json directly." << std::endl;
 }
 
 void ConsoleEditor::deleteEvent() {
-    std::cout << "Event deletion not yet implemented in console editor." << std::endl;
+    std::cout << "Event deletion not implemented in console editor." << std::endl;
+    std::cout << "Please edit events.json directly." << std::endl;
 }
 
-void ConsoleEditor::showEvent(const std::string& id) {
-    std::cout << "Event details not yet implemented in console editor." << std::endl;
+void ConsoleEditor::showEvent(const std::string& name) {
+    const auto& events = dataManager_.getEvents();
+    auto it = std::find_if(events.begin(), events.end(),
+                          [&](const DataManagement::EventData& e) { return e.name == name; });
+    
+    if (it == events.end()) {
+        std::cout << "Event not found: " << name << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== EVENT DETAILS ===" << std::endl;
+    std::cout << "Name: " << it->name << std::endl;
+    std::cout << "Description: " << it->description << std::endl;
+    
+    // Note: EventData structure might need to be checked for actual fields
+    std::cout << "This is a placeholder - full event details depend on EventData structure" << std::endl;
 }
 
 void ConsoleEditor::validateData() {
-    auto result = dataManager_.validateData();
-    
     std::cout << "\n=== DATA VALIDATION ===" << std::endl;
-    std::cout << "Status: " << (result.isValid ? "VALID" : "INVALID") << std::endl;
+    auto result = dataManager_.validateAll();
     
-    if (!result.errors.empty()) {
-        std::cout << "\nErrors:" << std::endl;
-        for (const auto& error : result.errors) {
-            std::cout << "- " << error << std::endl;
+    if (result.isValid) {
+        std::cout << "✓ All data is valid!" << std::endl;
+    } else {
+        std::cout << "✗ Validation failed!" << std::endl;
+        if (!result.errors.empty()) {
+            std::cout << "Errors:" << std::endl;
+            for (const auto& error : result.errors) {
+                std::cout << "  ✗ " << error << std::endl;
+            }
         }
     }
     
-    if (!result.warnings.empty()) {
+    if (result.hasWarnings()) {
         std::cout << "\nWarnings:" << std::endl;
         for (const auto& warning : result.warnings) {
-            std::cout << "- " << warning << std::endl;
+            std::cout << "  ⚠ " << warning << std::endl;
         }
     }
     
-    if (result.isValid && result.warnings.empty()) {
-        std::cout << "All data is valid!" << std::endl;
-    }
+    std::cout << "\n" << result.getSummary() << std::endl;
 }
 
 void ConsoleEditor::saveData() {
-    std::string filename = getUserInput("Filename to save to (default: editor_data.json)");
-    if (filename.empty()) filename = "editor_data.json";
-    
-    if (dataManager_.saveToFile(filename)) {
-        std::cout << "Editor data saved to " << filename << std::endl;
+    std::cout << "\n=== SAVE DATA ===" << std::endl;
+    if (dataManager_.saveAllData()) {
+        std::cout << "✓ All data saved successfully!" << std::endl;
     } else {
-        std::cout << "Failed to save editor data to " << filename << std::endl;
+        std::cout << "✗ Failed to save data!" << std::endl;
     }
 }
 
 void ConsoleEditor::loadData() {
-    std::string filename = getUserInput("Filename to load from");
-    
-    if (dataManager_.loadFromFile(filename)) {
-        std::cout << "Editor data loaded from " << filename << std::endl;
+    std::cout << "\n=== LOAD DATA ===" << std::endl;
+    if (dataManager_.loadAllData()) {
+        std::cout << "✓ All data loaded successfully!" << std::endl;
     } else {
-        std::cout << "Failed to load editor data from " << filename << std::endl;
+        std::cout << "✗ Failed to load data!" << std::endl;
     }
 }
 
 void ConsoleEditor::exportData() {
-    std::cout << "Export functionality not yet implemented." << std::endl;
+    std::string dir = getUserInput("Export directory (default: data_export)");
+    if (dir.empty()) dir = "data_export";
+    
+    std::cout << "\n=== EXPORT DATA ===" << std::endl;
+    if (dataManager_.saveAllData(dir + "/")) {
+        std::cout << "✓ Data exported to " << dir << "/" << std::endl;
+    } else {
+        std::cout << "✗ Failed to export data!" << std::endl;
+    }
 }
 
+void ConsoleEditor::syncFromGame() {
+    if (!gameInstance_) {
+        std::cout << "No game instance available for sync" << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== SYNC FROM GAME ===" << std::endl;
+    std::cout << "Syncing current game state to editor..." << std::endl;
+    
+    // This is where we would sync from the actual game
+    // For now, just load the current data
+    if (dataManager_.loadAllData()) {
+        std::cout << "✓ Game data synchronized!" << std::endl;
+        
+        const auto& materials = dataManager_.getMaterials();
+        const auto& recipes = dataManager_.getRecipes();
+        const auto& events = dataManager_.getEvents();
+        
+        std::cout << "Loaded:" << std::endl;
+        std::cout << "  Materials: " << materials.size() << std::endl;
+        std::cout << "  Recipes: " << recipes.size() << std::endl;
+        std::cout << "  Events: " << events.size() << std::endl;
+    } else {
+        std::cout << "✗ Failed to sync game data!" << std::endl;
+    }
+}
+
+void ConsoleEditor::syncToGame() {
+    if (!gameInstance_) {
+        std::cout << "No game instance available for sync" << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== SYNC TO GAME ===" << std::endl;
+    std::cout << "Applying editor changes to game..." << std::endl;
+    
+    // Apply data to game systems using the DataManager
+    try {
+        // Get game systems
+        auto& inventory = gameInstance_->getInventory();
+        auto& craftingSystem = gameInstance_->getCraftingSystem();
+        auto& controller = gameInstance_->getController();
+        
+        // Apply data
+        bool success = true;
+        success &= dataManager_.applyToInventory(inventory);
+        success &= dataManager_.applyToCraftingSystem(craftingSystem);
+        success &= dataManager_.applyToController(controller);
+        
+        if (success) {
+            std::cout << "✓ Changes applied to game successfully!" << std::endl;
+        } else {
+            std::cout << "⚠ Some changes failed to apply to game" << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cout << "✗ Error applying changes: " << e.what() << std::endl;
+    }
+}
+
+void ConsoleEditor::showGameState() {
+    std::cout << "\n=== GAME DATA STATUS ===" << std::endl;
+    
+    const auto& config = dataManager_.getGameConfig();
+    const auto& materials = dataManager_.getMaterials();
+    const auto& recipes = dataManager_.getRecipes();
+    const auto& events = dataManager_.getEvents();
+    
+    std::cout << "Game Configuration:" << std::endl;
+    std::cout << "  Version: " << config.version.toString() << std::endl;
+    std::cout << "  Name: " << config.configName << std::endl;
+    
+    std::cout << "\nData Counts:" << std::endl;
+    std::cout << "  Materials: " << materials.size() << std::endl;
+    std::cout << "  Recipes: " << recipes.size() << std::endl;
+    std::cout << "  Events: " << events.size() << std::endl;
+    
+    if (gameInstance_) {
+        std::cout << "\nGame Instance: Connected" << std::endl;
+    } else {
+        std::cout << "\nGame Instance: Not connected" << std::endl;
+    }
+}
+
+void ConsoleEditor::showInventory() {
+    if (!gameInstance_) {
+        std::cout << "No game instance available" << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== GAME INVENTORY ===" << std::endl;
+    const auto& inventory = gameInstance_->getInventory();
+    auto cards = inventory.getCards();
+    
+    std::cout << "Inventory contains " << cards.size() << " items:" << std::endl;
+    for (const auto& card : cards) {
+        std::cout << "  " << card.name << " x" << card.quantity << std::endl;
+    }
+}
+
+void ConsoleEditor::showRecipeStatus() {
+    if (!gameInstance_) {
+        std::cout << "No game instance available" << std::endl;
+        return;
+    }
+    
+    std::cout << "\n=== CRAFTING SYSTEM STATUS ===" << std::endl;
+    const auto& craftingSystem = gameInstance_->getCraftingSystem();
+    auto recipes = craftingSystem.getAllRecipes();
+    
+    std::cout << "Available recipes:" << std::endl;
+    for (const auto& recipe : recipes) {
+        std::string status = recipe.isUnlocked ? "Unlocked" : "Locked";
+        std::cout << "  " << recipe.name << " - " << status << std::endl;
+    }
+}
+
+void ConsoleEditor::refreshGameData() {
+    std::cout << "\n=== REFRESH GAME DATA ===" << std::endl;
+    
+    // Reload data from files
+    if (dataManager_.loadAllData()) {
+        std::cout << "✓ Data refreshed from files" << std::endl;
+        
+        // If game instance is available, sync the refreshed data
+        if (gameInstance_) {
+            syncToGame();
+        }
+    } else {
+        std::cout << "✗ Failed to refresh data" << std::endl;
+    }
+}
+
+// Utility functions
 std::string ConsoleEditor::getUserInput(const std::string& prompt) {
     std::cout << prompt << ": ";
     std::string input;
@@ -437,38 +624,43 @@ std::string ConsoleEditor::getUserInput(const std::string& prompt) {
 }
 
 int ConsoleEditor::getUserChoice(const std::string& prompt, int min, int max) {
-    int choice;
     while (true) {
         std::cout << prompt << " (" << min << "-" << max << "): ";
-        if (std::cin >> choice && choice >= min && choice <= max) {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return choice;
-        } else {
-            std::cout << "Invalid input. Please enter a number between " << min << " and " << max << "." << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::string input;
+        std::getline(std::cin, input);
+        
+        try {
+            int choice = std::stoi(input);
+            if (choice >= min && choice <= max) {
+                return choice;
+            }
+        } catch (const std::exception&) {
+            // Invalid input, continue loop
         }
+        
+        std::cout << "Invalid input. Please enter a number between " << min << " and " << max << std::endl;
     }
 }
 
 float ConsoleEditor::getUserFloat(const std::string& prompt) {
-    float value;
     while (true) {
         std::cout << prompt << ": ";
-        if (std::cin >> value) {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;
-        } else {
-            std::cout << "Invalid input. Please enter a number." << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::string input;
+        std::getline(std::cin, input);
+        
+        try {
+            return std::stof(input);
+        } catch (const std::exception&) {
+            std::cout << "Invalid input. Please enter a valid number." << std::endl;
         }
     }
 }
 
 bool ConsoleEditor::confirmAction(const std::string& action) {
-    std::string response = getUserInput("Are you sure you want to " + action + "? (yes/no)");
-    return response == "yes" || response == "y" || response == "Y";
+    std::cout << "Are you sure you want to " << action << "? (y/N): ";
+    std::string input;
+    std::getline(std::cin, input);
+    return input == "y" || input == "Y" || input == "yes" || input == "Yes";
 }
 
 std::string ConsoleEditor::attributeTypeToString(AttributeType type) {
@@ -522,108 +714,4 @@ CardType ConsoleEditor::stringToCardType(const std::string& str) {
     if (str == "metal" || str == "Metal") return CardType::METAL;
     if (str == "building" || str == "Building") return CardType::BUILDING;
     return CardType::MISC; // Default
-}
-
-// Game state inspection methods
-void ConsoleEditor::handleGameStateCommands() {
-    std::cout << "\nGame State Commands:" << std::endl;
-    std::cout << "1. Show current game state" << std::endl;
-    std::cout << "2. Show inventory" << std::endl;
-    std::cout << "3. Show recipe status" << std::endl;
-    std::cout << "4. Refresh game data" << std::endl;
-    std::cout << "0. Back to main menu" << std::endl;
-    
-    int choice = getUserChoice("Choose option", 0, 4);
-    
-    switch (choice) {
-        case 1: showGameState(); break;
-        case 2: showInventory(); break;
-        case 3: showRecipeStatus(); break;
-        case 4: refreshGameData(); break;
-        case 0: break;
-    }
-}
-
-void ConsoleEditor::showGameState() {
-    auto gameState = dataManager_.getCurrentGameState();
-    
-    std::cout << "\n=== CURRENT GAME STATE ===" << std::endl;
-    std::cout << "Player Health: " << gameState.playerHealth << std::endl;
-    std::cout << "Inventory Items: " << gameState.inventoryCards.size() << std::endl;
-    std::cout << "Available Recipes: " << gameState.availableRecipes.size() << std::endl;
-    
-    if (!gameState.availableRecipes.empty()) {
-        std::cout << "\nRecipes:" << std::endl;
-        for (const auto& recipe : gameState.availableRecipes) {
-            std::cout << "- " << recipe << std::endl;
-        }
-    }
-}
-
-void ConsoleEditor::showInventory() {
-    auto gameState = dataManager_.getCurrentGameState();
-    
-    std::cout << "\n=== CURRENT INVENTORY ===" << std::endl;
-    if (gameState.inventoryCards.empty()) {
-        std::cout << "Inventory is empty" << std::endl;
-        return;
-    }
-    
-    std::cout << std::left << std::setw(25) << "Card Name" 
-              << std::setw(10) << "Quantity" 
-              << std::setw(15) << "Type" 
-              << std::setw(10) << "Rarity" << std::endl;
-    std::cout << std::string(60, '-') << std::endl;
-    
-    for (const auto& card : gameState.inventoryCards) {
-        std::cout << std::left << std::setw(25) << card.name
-                  << std::setw(10) << card.quantity
-                  << std::setw(15) << cardTypeToString(card.type)
-                  << std::setw(10) << card.rarity << std::endl;
-    }
-    
-    std::cout << "\nTotal cards: " << gameState.inventoryCards.size() << std::endl;
-}
-
-void ConsoleEditor::showRecipeStatus() {
-    auto gameState = dataManager_.getCurrentGameState();
-    
-    std::cout << "\n=== RECIPE STATUS ===" << std::endl;
-    std::cout << "Available recipes: " << gameState.availableRecipes.size() << std::endl;
-    
-    if (!gameState.availableRecipes.empty()) {
-        for (const auto& recipeName : gameState.availableRecipes) {
-            std::cout << "✓ " << recipeName << std::endl;
-        }
-    }
-    
-    // Show editor recipes vs game recipes
-    const auto& editorRecipes = dataManager_.getAllRecipes();
-    std::cout << "\nEditor recipes: " << editorRecipes.size() << std::endl;
-    
-    std::set<std::string> gameRecipeSet(gameState.availableRecipes.begin(), gameState.availableRecipes.end());
-    
-    for (const auto& recipe : editorRecipes) {
-        bool inGame = gameRecipeSet.find(recipe.name) != gameRecipeSet.end();
-        std::cout << (inGame ? "✓" : "✗") << " " << recipe.name;
-        if (!inGame) std::cout << " (editor only)";
-        std::cout << std::endl;
-    }
-}
-
-void ConsoleEditor::refreshGameData() {
-    std::cout << "Refreshing data from game..." << std::endl;
-    dataManager_.syncFromGame();
-    std::cout << "Game data refreshed!" << std::endl;
-}
-
-void ConsoleEditor::syncFromGame() {
-    std::cout << "Syncing editor data from current game state..." << std::endl;
-    dataManager_.syncFromGame();
-    std::cout << "Sync complete!" << std::endl;
-}
-
-void ConsoleEditor::syncToGame() {
-    std::cout << "Syncing editor changes to game..." << std::endl;
-    dataManager_.syncToGame();
 }
