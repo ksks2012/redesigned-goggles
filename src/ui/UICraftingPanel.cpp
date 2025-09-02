@@ -75,6 +75,7 @@ UICraftingPanel::UICraftingPanel(SDLManager& sdlManager,
     : UIComponent(Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
                   Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT, sdlManager),
       visible_(false),
+      scrollOffset_(0),
       onRecipeClick_(onRecipeClick) {
 }
 
@@ -88,17 +89,33 @@ void UICraftingPanel::render() {
     renderTitle();
     renderCloseHint();
     
-    // Render recipe items
-    for (auto& recipeItem : recipeItems_) {
-        recipeItem->render();
+    // Render visible recipe items with scroll offset
+    int startY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
+    int itemHeight = Constants::RECIPE_ITEM_HEIGHT;
+    int visibleItems = (Constants::CRAFT_PANEL_HEIGHT - Constants::CRAFT_PANEL_RECIPES_START_Y - 20) / itemHeight;
+    
+    for (int i = scrollOffset_; i < static_cast<int>(recipeItems_.size()) && i < scrollOffset_ + visibleItems; ++i) {
+        if (recipeItems_[i]) {
+            // Adjust recipe item position based on scroll offset
+            int displayIndex = i - scrollOffset_;
+            int itemY = startY + displayIndex * itemHeight;
+            recipeItems_[i]->setPosition(Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_MARGIN, itemY);
+            recipeItems_[i]->render();
+        }
+    }
+    
+    // Render scroll indicator if needed
+    if (recipeItems_.size() > visibleItems) {
+        renderScrollIndicator();
     }
 }
 
-void UICraftingPanel::update(const CraftingSystem& craftingSystem, const Inventory& inventory) {
+void UICraftingPanel::update(const CraftingSystem& craftingSystem, const Inventory& inventory, int scrollOffset) {
     if (!visible_) {
         return;
     }
     
+    scrollOffset_ = scrollOffset;
     auto allRecipes = craftingSystem.getAllRecipes();
     
     // Create recipe items if needed
@@ -207,4 +224,34 @@ void UICraftingPanel::renderCloseHint() {
                Constants::CRAFT_PANEL_TITLE_OFFSET_X, 
                Constants::CRAFT_PANEL_HINT_OFFSET_Y, 
                Constants::SECONDARY_TEXT_COLOR);
+}
+
+void UICraftingPanel::renderScrollIndicator() {
+    if (recipeItems_.empty()) return;
+    
+    // Calculate scroll indicator dimensions
+    int scrollBarX = Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_WIDTH - 15;
+    int scrollBarY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
+    int scrollBarHeight = Constants::CRAFT_PANEL_HEIGHT - Constants::CRAFT_PANEL_RECIPES_START_Y - 20;
+    
+    // Background track
+    SDL_Rect trackRect = {scrollBarX, scrollBarY, 10, scrollBarHeight};
+    SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 100, 100, 100, 128);
+    SDL_RenderFillRect(sdlManager_.getRenderer(), &trackRect);
+    
+    // Calculate thumb position and size
+    int visibleItems = scrollBarHeight / Constants::RECIPE_ITEM_HEIGHT;
+    int totalItems = static_cast<int>(recipeItems_.size());
+    
+    if (totalItems > visibleItems) {
+        float thumbHeight = (static_cast<float>(visibleItems) / totalItems) * scrollBarHeight;
+        float thumbPosition = (static_cast<float>(scrollOffset_) / (totalItems - visibleItems)) * (scrollBarHeight - thumbHeight);
+        
+        SDL_Rect thumbRect = {scrollBarX + 1, 
+                             static_cast<int>(scrollBarY + thumbPosition), 
+                             8, 
+                             static_cast<int>(thumbHeight)};
+        SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 200, 200, 200, 255);
+        SDL_RenderFillRect(sdlManager_.getRenderer(), &thumbRect);
+    }
 }

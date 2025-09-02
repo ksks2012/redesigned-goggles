@@ -17,12 +17,13 @@ View::View(SDLManager& sdl)
 }
 
 void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
-                           bool showCraftingPanel, const CraftingSystem& craftingSystem) {
+                  bool showCraftingPanel, const CraftingSystem& craftingSystem,
+                  int inventoryScrollOffset, int craftingScrollOffset) {
     
     renderBackground();
     
-    // Update and render cards
-    updateCards(inventory);
+    // Update and render cards with scroll offset
+    updateCards(inventory, inventoryScrollOffset);
     for (auto& card : cards_) {
         card->render();
     }
@@ -43,10 +44,10 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
         button->render();
     }
     
-    // Handle crafting panel
+    // Handle crafting panel with scroll support
     if (showCraftingPanel) {
         craftingPanel_->show();
-        craftingPanel_->update(craftingSystem, inventory);
+        craftingPanel_->update(craftingSystem, inventory, craftingScrollOffset);
     } else {
         craftingPanel_->hide();
     }
@@ -55,6 +56,9 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     // Render hints
     renderHints();
     
+    // Render scroll indicators
+    renderScrollIndicators(inventory, inventoryScrollOffset, craftingScrollOffset, showCraftingPanel, craftingSystem);
+    
     // Update and render tooltip
     updateTooltip(inventory, selectedCard, showCraftingPanel, mouseX, mouseY);
     tooltip_->render();
@@ -62,12 +66,12 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     SDL_RenderPresent(sdlManager_.getRenderer());
 }
 
-const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mouseY) const {
+const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mouseY, int scrollOffset) const {
     // Calculate card positions directly from inventory to avoid dependency on render state
     int index = 0;
     for (const auto& card : inventory.getCards()) {
         int cardX = Constants::CARD_X;
-        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
+        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING - scrollOffset;
         
         // Check if mouse is within card bounds
         if (mouseX >= cardX && mouseX <= cardX + Constants::CARD_WIDTH && 
@@ -90,13 +94,14 @@ bool View::isPointInUIArea(int x, int y, const std::string& areaName) const {
     return false;
 }
 
-int View::getClickedRecipeIndex(int mouseX, int mouseY) const {
+int View::getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset) const {
     if (!isCraftingPanelHovered(mouseX, mouseY)) {
         return -1;
     }
     
     int recipesStartY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
-    int recipeIndex = (mouseY - recipesStartY) / Constants::RECIPE_ITEM_HEIGHT;
+    int adjustedMouseY = mouseY + scrollOffset;
+    int recipeIndex = (adjustedMouseY - recipesStartY) / Constants::RECIPE_ITEM_HEIGHT;
     return recipeIndex;
 }
 
@@ -146,19 +151,28 @@ void View::createButtons() {
     buttons_.push_back(std::move(craftButton));
 }
 
-void View::updateCards(const Inventory& inventory) {
+void View::updateCards(const Inventory& inventory, int scrollOffset) {
     cards_.clear();
     
-    int index = 0;
-    for (const auto& card : inventory.getCards()) {
-        // Cards are arranged vertically, starting from CARD_X (which acts as base Y coordinate)
-        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING;
+    // Calculate visible area for cards
+    int visibleCards = 10; // Maximum visible cards in the viewport
+    const auto& allCards = inventory.getCards();
+    
+    // Only create UI cards for visible range
+    int startIndex = scrollOffset;
+    int endIndex = std::min(startIndex + visibleCards, static_cast<int>(allCards.size()));
+    
+    for (int i = startIndex; i < endIndex; ++i) {
+        const auto& card = allCards[i];
+        // Calculate position based on display index (not actual index)
+        int displayIndex = i - startIndex;
+        int cardY = Constants::CARD_X + displayIndex * Constants::CARD_SPACING;
         
         auto uiCard = std::make_unique<UICard>(card, Constants::CARD_X, cardY, sdlManager_);
         cards_.push_back(std::move(uiCard));
-        
-        index++;
     }
+    
+    // Note: Scroll indicators are now handled in the main render method
 }
 
 void View::renderBackground() {
@@ -233,4 +247,20 @@ SDL_Rect View::getButtonRect(const std::string& buttonName) const {
 
 SDL_Rect View::getCraftingPanelRect() const {
     return getButtonRect("craftingPanel");
+}
+
+void View::renderScrollIndicators(const Inventory& inventory, int inventoryScrollOffset, 
+                                  int craftingScrollOffset, bool showCraftingPanel, 
+                                  const CraftingSystem& craftingSystem) {
+    // For simplicity, just add visual feedback when scrolling is possible
+    // The detailed scroll bar rendering can be added later if needed
+    
+    // Check if inventory needs scrolling
+    int totalCards = inventory.getCards().size();
+    if (totalCards > 10) { // If more than 10 cards, show scroll hint
+        // Simple scroll indicator - can be enhanced later
+        SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 100, 100, 100, 100);
+        SDL_Rect scrollHint = {Constants::CARD_X + 250, Constants::CARD_X + 10, 20, 5};
+        SDL_RenderFillRect(sdlManager_.getRenderer(), &scrollHint);
+    }
 }

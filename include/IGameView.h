@@ -19,12 +19,14 @@ public:
                        int mouseX, 
                        int mouseY, 
                        bool showCraftingPanel, 
-                       const CraftingSystem& craftingSystem) = 0;
+                       const CraftingSystem& craftingSystem,
+                       int inventoryScrollOffset = 0,
+                       int craftingScrollOffset = 0) = 0;
     
     // UI state queries - no business logic
-    virtual const Card* getHoveredCard(const Inventory& inventory, int mouseX, int mouseY) const = 0;
+    virtual const Card* getHoveredCard(const Inventory& inventory, int mouseX, int mouseY, int scrollOffset = 0) const = 0;
     virtual bool isPointInUIArea(int x, int y, const std::string& areaName) const = 0;
-    virtual int getClickedRecipeIndex(int mouseX, int mouseY) const = 0;
+    virtual int getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset = 0) const = 0;
     
     // UI component state
     virtual bool isButtonHovered(const std::string& buttonName, int mouseX, int mouseY) const = 0;

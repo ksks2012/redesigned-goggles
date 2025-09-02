@@ -39,6 +39,9 @@ void Controller::handleEvent(SDL_Event& event) {
                 inputHandler_->handleMouseUp(event.button.x, event.button.y);
             }
             break;
+        case SDL_MOUSEWHEEL:
+            inputHandler_->handleMouseWheel(event.wheel.x, event.wheel.y, event.wheel.y);
+            break;
         case SDL_KEYDOWN:
             inputHandler_->handleKeyDown(event.key.keysym.sym);
             break;
@@ -52,7 +55,8 @@ bool Controller::isRunning() const {
 void Controller::updateView() {
     view_.render(inventory_, inputHandler_->getSelectedCard(), 
                 inputHandler_->getMouseX(), inputHandler_->getMouseY(), 
-                inputHandler_->isShowingCraftingPanel(), craftingSystem_);
+                inputHandler_->isShowingCraftingPanel(), craftingSystem_,
+                inputHandler_->getInventoryScrollOffset(), inputHandler_->getCraftingScrollOffset());
 }
 
 void Controller::organizeInventory() {

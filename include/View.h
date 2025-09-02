@@ -29,11 +29,13 @@ public:
                int mouseX, 
                int mouseY, 
                bool showCraftingPanel, 
-               const CraftingSystem& craftingSystem) override;
+               const CraftingSystem& craftingSystem,
+               int inventoryScrollOffset = 0,
+               int craftingScrollOffset = 0) override;
     
-    const Card* getHoveredCard(const Inventory& inventory, int mouseX, int mouseY) const override;
+    const Card* getHoveredCard(const Inventory& inventory, int mouseX, int mouseY, int scrollOffset = 0) const override;
     bool isPointInUIArea(int x, int y, const std::string& areaName) const override;
-    int getClickedRecipeIndex(int mouseX, int mouseY) const override;
+    int getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset = 0) const override;
     bool isButtonHovered(const std::string& buttonName, int mouseX, int mouseY) const override;
     bool isCraftingPanelHovered(int mouseX, int mouseY) const override;
 
@@ -51,7 +53,7 @@ private:
     
     // Component management - pure rendering logic
     void createButtons();
-    void updateCards(const Inventory& inventory);
+    void updateCards(const Inventory& inventory, int scrollOffset = 0);
     void renderBackground();
     void renderHints();
     void updateTooltip(const Inventory& inventory, 
@@ -59,6 +61,12 @@ private:
                       bool showCraftingPanel, 
                       int mouseX, 
                       int mouseY);
+    
+    // Scroll-aware rendering helpers
+    void renderScrollableCardList(const Inventory& inventory, int scrollOffset);
+    void renderScrollIndicators(const Inventory& inventory, int inventoryScrollOffset, 
+                               int craftingScrollOffset, bool showCraftingPanel, 
+                               const CraftingSystem& craftingSystem);
     
     // UI state helpers - no business logic
     void initializeUIAreas();

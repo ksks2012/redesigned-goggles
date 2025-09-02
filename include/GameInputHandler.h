@@ -16,6 +16,7 @@ public:
     virtual void handleMouseDown(int x, int y) = 0;
     virtual void handleMouseUp(int x, int y) = 0;
     virtual void handleMouseMotion(int x, int y) = 0;
+    virtual void handleMouseWheel(int x, int y, int deltaY) = 0;
     virtual void handleKeyDown(int keyCode) = 0;
     virtual void handleQuit() = 0;
 };
@@ -35,6 +36,7 @@ public:
     void handleMouseDown(int x, int y) override;
     void handleMouseUp(int x, int y) override;
     void handleMouseMotion(int x, int y) override;
+    void handleMouseWheel(int x, int y, int deltaY) override;
     void handleKeyDown(int keyCode) override;
     void handleQuit() override;
     
@@ -44,6 +46,8 @@ public:
     bool isShowingCraftingPanel() const { return showCraftingPanel_; }
     int getMouseX() const { return mouseX_; }
     int getMouseY() const { return mouseY_; }
+    int getInventoryScrollOffset() const { return inventoryScrollOffset_; }
+    int getCraftingScrollOffset() const { return craftingScrollOffset_; }
     
     // Callback setters for game operations
     void setSaveCallback(std::function<bool()> callback) { saveCallback_ = callback; }
@@ -61,6 +65,10 @@ private:
     bool showCraftingPanel_;
     int mouseX_, mouseY_;
     
+    // Scroll states for different UI areas
+    int inventoryScrollOffset_;  // Scroll offset for inventory card list
+    int craftingScrollOffset_;   // Scroll offset for crafting panel recipes
+    
     // Callbacks for game operations
     std::function<bool()> saveCallback_;
     std::function<bool()> loadCallback_;
@@ -70,6 +78,7 @@ private:
     void handleButtonClick(const std::string& buttonName);
     void handleCardClick(const Card* card);
     void handleRecipeClick(int recipeIndex);
+    void handleScrollWheel(int x, int y, int deltaY);
     void addRandomCard();
     void removeFirstCard();
     void toggleCraftingPanel();
