@@ -60,7 +60,7 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     renderScrollIndicators(inventory, inventoryScrollOffset, craftingScrollOffset, showCraftingPanel, craftingSystem);
     
     // Update and render tooltip
-    updateTooltip(inventory, selectedCard, showCraftingPanel, mouseX, mouseY);
+    updateTooltip(inventory, selectedCard, showCraftingPanel, mouseX, mouseY, inventoryScrollOffset);
     tooltip_->render();
     
     SDL_RenderPresent(sdlManager_.getRenderer());
@@ -100,8 +100,8 @@ int View::getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset) const 
     }
     
     int recipesStartY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
-    int adjustedMouseY = mouseY + scrollOffset;
-    int recipeIndex = (adjustedMouseY - recipesStartY) / Constants::RECIPE_ITEM_HEIGHT;
+    int relativeY = mouseY - recipesStartY;
+    int recipeIndex = (relativeY / Constants::RECIPE_ITEM_HEIGHT) + scrollOffset;
     return recipeIndex;
 }
 
@@ -154,25 +154,17 @@ void View::createButtons() {
 void View::updateCards(const Inventory& inventory, int scrollOffset) {
     cards_.clear();
     
-    // Calculate visible area for cards
-    int visibleCards = 10; // Maximum visible cards in the viewport
     const auto& allCards = inventory.getCards();
     
-    // Only create UI cards for visible range
-    int startIndex = scrollOffset;
-    int endIndex = std::min(startIndex + visibleCards, static_cast<int>(allCards.size()));
-    
-    for (int i = startIndex; i < endIndex; ++i) {
+    // Create UI cards for all cards with adjusted positions based on scroll offset
+    for (int i = 0; i < static_cast<int>(allCards.size()); ++i) {
         const auto& card = allCards[i];
-        // Calculate position based on display index (not actual index)
-        int displayIndex = i - startIndex;
-        int cardY = Constants::CARD_X + displayIndex * Constants::CARD_SPACING;
+        // Calculate position with scroll offset applied
+        int cardY = Constants::CARD_X + i * Constants::CARD_SPACING - scrollOffset;
         
         auto uiCard = std::make_unique<UICard>(card, Constants::CARD_X, cardY, sdlManager_);
         cards_.push_back(std::move(uiCard));
     }
-    
-    // Note: Scroll indicators are now handled in the main render method
 }
 
 void View::renderBackground() {
@@ -205,10 +197,10 @@ void View::renderHints() {
 }
 
 void View::updateTooltip(const Inventory& inventory, const Card* selectedCard, 
-                         bool showCraftingPanel, int mouseX, int mouseY) {
+                         bool showCraftingPanel, int mouseX, int mouseY, int scrollOffset) {
     // Show tooltip only when not dragging and crafting panel is not shown
     if (!selectedCard && !showCraftingPanel) {
-        const Card* hoveredCard = getHoveredCard(inventory, mouseX, mouseY);
+        const Card* hoveredCard = getHoveredCard(inventory, mouseX, mouseY, scrollOffset);
         if (hoveredCard) {
             tooltip_->showForCard(*hoveredCard, mouseX, mouseY);
         } else {

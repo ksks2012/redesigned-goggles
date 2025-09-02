@@ -39,7 +39,7 @@ void GameInputHandler::handleMouseDown(int x, int y) {
     // Handle crafting panel interactions
     if (showCraftingPanel_) {
         if (view_.isCraftingPanelHovered(x, y)) {
-            int recipeIndex = view_.getClickedRecipeIndex(x, y);
+            int recipeIndex = view_.getClickedRecipeIndex(x, y, craftingScrollOffset_);
             if (recipeIndex >= 0) {
                 handleRecipeClick(recipeIndex);
             }
@@ -53,7 +53,7 @@ void GameInputHandler::handleMouseDown(int x, int y) {
     
     // Card selection logic (only when crafting panel is not shown)
     if (!showCraftingPanel_) {
-        const Card* hoveredCard = view_.getHoveredCard(inventory_, x, y);
+        const Card* hoveredCard = view_.getHoveredCard(inventory_, x, y, inventoryScrollOffset_);
         if (hoveredCard) {
             selectedCard_ = const_cast<Card*>(hoveredCard);
             handleCardClick(hoveredCard);
@@ -201,16 +201,20 @@ void GameInputHandler::craftRecipe(int recipeIndex) {
 }
 
 void GameInputHandler::handleScrollWheel(int x, int y, int deltaY) {
-    const int SCROLL_SPEED = 3; // Cards to scroll per wheel notch
+    const int INVENTORY_SCROLL_SPEED = 3; // Pixels to scroll per wheel notch for inventory
+    const int RECIPE_SCROLL_SPEED = 1;    // Recipe items to scroll per wheel notch for crafting panel
     
     // Determine which area is being scrolled based on mouse position
     if (showCraftingPanel_ && view_.isCraftingPanelHovered(x, y)) {
-        // Scroll crafting panel recipes
-        craftingScrollOffset_ -= deltaY * SCROLL_SPEED;
+        // Scroll crafting panel recipes (item-based scrolling)
+        craftingScrollOffset_ -= deltaY * RECIPE_SCROLL_SPEED;
         
         // Calculate maximum scroll offset based on recipe count
         auto allRecipes = craftingSystem_.getAllRecipes();
-        int visibleRecipes = 6; // Approximate visible recipes in panel
+        // NOTE: calculate by height of view
+        int panelHeight = Constants::RECIPE_LIST_HEIGHT;
+        int recipeItemHeight = Constants::RECIPE_ITEM_HEIGHT;
+        int visibleRecipes = panelHeight / recipeItemHeight;
         int maxScrollOffset = std::max(0, static_cast<int>(allRecipes.size()) - visibleRecipes);
         
         // Clamp scroll offset
@@ -218,13 +222,22 @@ void GameInputHandler::handleScrollWheel(int x, int y, int deltaY) {
         
         std::cout << "Crafting panel scroll: " << craftingScrollOffset_ << "/" << maxScrollOffset << std::endl;
     } else {
-        // Scroll inventory card list
-        inventoryScrollOffset_ -= deltaY * SCROLL_SPEED;
+        // Scroll inventory card list (pixel-based scrolling)
+        inventoryScrollOffset_ -= deltaY * INVENTORY_SCROLL_SPEED;
         
-        // Calculate maximum scroll offset based on card count
+        // Calculate maximum scroll offset based on card count and spacing
         auto& cards = inventory_.getCards();
-        int visibleCards = 10; // Approximate visible cards in inventory
-        int maxScrollOffset = std::max(0, static_cast<int>(cards.size()) - visibleCards);
+        // Calculate visible cards based on inventory panel height
+        int panelHeight = Constants::WINDOW_HEIGHT;
+        int cardSpacing = Constants::CARD_SPACING;
+        int visibleCards = panelHeight / cardSpacing - 1;
+        int totalCards = static_cast<int>(cards.size());
+        
+        // Calculate max scroll in pixels based on card spacing
+        int maxScrollOffset = 0;
+        if (totalCards > visibleCards) {
+            maxScrollOffset = (totalCards - visibleCards) * Constants::CARD_SPACING;
+        }
         
         // Clamp scroll offset
         inventoryScrollOffset_ = std::max(0, std::min(inventoryScrollOffset_, maxScrollOffset));

@@ -93,14 +93,19 @@ void UICraftingPanel::render() {
     int startY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
     int itemHeight = Constants::RECIPE_ITEM_HEIGHT;
     int visibleItems = (Constants::CRAFT_PANEL_HEIGHT - Constants::CRAFT_PANEL_RECIPES_START_Y - 20) / itemHeight;
+    int panelBottom = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT - 20;
     
     for (int i = scrollOffset_; i < static_cast<int>(recipeItems_.size()) && i < scrollOffset_ + visibleItems; ++i) {
         if (recipeItems_[i]) {
             // Adjust recipe item position based on scroll offset
             int displayIndex = i - scrollOffset_;
             int itemY = startY + displayIndex * itemHeight;
-            recipeItems_[i]->setPosition(Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_MARGIN, itemY);
-            recipeItems_[i]->render();
+            
+            // Only render items that are within the panel bounds
+            if (itemY >= startY && itemY + itemHeight <= panelBottom) {
+                recipeItems_[i]->setPosition(Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_MARGIN, itemY);
+                recipeItems_[i]->render();
+            }
         }
     }
     
@@ -178,26 +183,23 @@ void UICraftingPanel::createRecipeItems(const std::vector<Recipe>& recipes) {
     recipeItems_.clear();
     
     int startY = Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_RECIPES_START_Y;
-    int currentY = startY;
     
+    // Create all recipe items regardless of panel height - scrolling will handle visibility
     for (size_t i = 0; i < recipes.size(); ++i) {
         const Recipe& recipe = recipes[i];
+        
+        // Calculate initial position (will be adjusted during scrolling)
+        int itemY = startY + i * Constants::RECIPE_ITEM_HEIGHT;
         
         auto recipeItem = std::make_unique<UIRecipeItem>(
             recipe, 
             Constants::CRAFT_PANEL_X + Constants::CRAFT_PANEL_MARGIN, 
-            currentY, 
+            itemY, 
             sdlManager_, 
             onRecipeClick_
         );
         
         recipeItems_.push_back(std::move(recipeItem));
-        currentY += Constants::RECIPE_ITEM_HEIGHT;
-        
-        // Prevent exceeding panel range
-        if (currentY + Constants::RECIPE_ITEM_HEIGHT > Constants::CRAFT_PANEL_Y + Constants::CRAFT_PANEL_HEIGHT - Constants::CRAFT_PANEL_BOTTOM_MARGIN) {
-            break;
-        }
     }
 }
 

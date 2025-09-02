@@ -60,7 +60,8 @@ private:
                       const Card* selectedCard, 
                       bool showCraftingPanel, 
                       int mouseX, 
-                      int mouseY);
+                      int mouseY,
+                      int scrollOffset = 0);
     
     // Scroll-aware rendering helpers
     void renderScrollableCardList(const Inventory& inventory, int scrollOffset);
