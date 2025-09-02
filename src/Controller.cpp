@@ -40,7 +40,7 @@ void Controller::handleEvent(SDL_Event& event) {
             }
             break;
         case SDL_MOUSEWHEEL:
-            inputHandler_->handleMouseWheel(event.wheel.x, event.wheel.y, event.wheel.y);
+            inputHandler_->handleMouseWheel(inputHandler_->getMouseX(), inputHandler_->getMouseY(), event.wheel.y);
             break;
         case SDL_KEYDOWN:
             inputHandler_->handleKeyDown(event.key.keysym.sym);
