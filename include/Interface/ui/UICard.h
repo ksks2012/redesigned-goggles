@@ -1,11 +1,12 @@
 #pragma once
-#include "UIComponent.h"
+#include "UIContainer.h"
 #include "Core/Card.h"
 
 /**
  * Card UI component for displaying inventory cards
+ * Inherits from UIContainer to support scroll management and layout management
  */
-class UICard : public UIComponent {
+class UICard : public UIContainer {
 public:
     UICard(const Card& card, int x, int y, SDLManager& sdlManager);
     
@@ -19,6 +20,9 @@ public:
     // Visual state
     void setSelected(bool selected);
     bool isSelected() const { return selected_; }
+    
+    // Layout management for card content
+    void updateLayout();
 
 private:
     Card card_;
@@ -26,4 +30,5 @@ private:
     
     SDL_Color getRarityColor() const;
     std::string getDisplayText() const;
+    void createCardContent();  // Create child components for card content
 };

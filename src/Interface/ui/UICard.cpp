@@ -1,9 +1,10 @@
 #include "Interface/ui/UICard.h"
 
 UICard::UICard(const Card& card, int x, int y, SDLManager& sdlManager)
-    : UIComponent(x, y, Constants::CARD_WIDTH, Constants::CARD_HEIGHT, sdlManager),
+    : UIContainer(x, y, Constants::CARD_WIDTH, Constants::CARD_HEIGHT, sdlManager),
       card_(card),
       selected_(false) {
+    createCardContent();
 }
 
 void UICard::render() {
@@ -45,10 +46,23 @@ void UICard::renderDragging(int mouseX, int mouseY) {
 
 void UICard::setCard(const Card& card) {
     card_ = card;
+    updateLayout();  // Update layout when card changes
 }
 
 void UICard::setSelected(bool selected) {
     selected_ = selected;
+}
+
+void UICard::updateLayout() {
+    // Clear existing children and recreate content
+    clearChildren();
+    createCardContent();
+}
+
+void UICard::createCardContent() {
+    // This method creates child components for the card content
+    // For now, we keep the existing rendering approach but prepare for future expansion
+    // In the future, card elements like title, quantity, type could be separate UI components
 }
 
 SDL_Color UICard::getRarityColor() const {

@@ -4,11 +4,12 @@
 // UIRecipeItem implementation
 UIRecipeItem::UIRecipeItem(const Recipe& recipe, int x, int y, SDLManager& sdlManager, 
                            std::function<void(const Recipe&)> onRecipeClick)
-    : UIComponent(x, y, Constants::CRAFT_PANEL_WIDTH - Constants::RECIPE_ITEM_MARGIN,
+    : UIContainer(x, y, Constants::CRAFT_PANEL_WIDTH - Constants::RECIPE_ITEM_MARGIN,
                   Constants::RECIPE_ITEM_HEIGHT - Constants::RECIPE_ITEM_VERTICAL_SPACING, sdlManager),
       recipe_(recipe),
       canCraft_(false),
       onRecipeClick_(onRecipeClick) {
+    createRecipeContent();
 }
 
 void UIRecipeItem::render() {
@@ -46,6 +47,19 @@ void UIRecipeItem::render() {
 void UIRecipeItem::update(const Recipe& recipe, bool canCraft) {
     recipe_ = recipe;
     canCraft_ = canCraft;
+    updateLayout();  // Update layout when recipe changes
+}
+
+void UIRecipeItem::updateLayout() {
+    // Clear existing children and recreate content
+    clearChildren();
+    createRecipeContent();
+}
+
+void UIRecipeItem::createRecipeContent() {
+    // This method creates child components for the recipe content
+    // For now, we keep the existing rendering approach but prepare for future expansion
+    // In the future, recipe elements like ingredients, success rate could be separate UI components
 }
 
 void UIRecipeItem::handleClick(int mouseX, int mouseY) {
@@ -72,11 +86,12 @@ void UIRecipeItem::renderIngredientsList(int x, int y) {
 // UICraftingPanel implementation
 UICraftingPanel::UICraftingPanel(SDLManager& sdlManager, 
                                  std::function<void(const Recipe&)> onRecipeClick)
-    : UIComponent(Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
+    : UIContainer(Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
                   Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT, sdlManager),
       visible_(false),
       scrollOffset_(0),
       onRecipeClick_(onRecipeClick) {
+    createPanelContent();
 }
 
 void UICraftingPanel::render() {
@@ -256,4 +271,16 @@ void UICraftingPanel::renderScrollIndicator() {
         SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 200, 200, 200, 255);
         SDL_RenderFillRect(sdlManager_.getRenderer(), &thumbRect);
     }
+}
+
+void UICraftingPanel::updatePanelLayout() {
+    // Clear existing children and recreate content
+    clearChildren();
+    createPanelContent();
+}
+
+void UICraftingPanel::createPanelContent() {
+    // This method creates child components for the panel content
+    // For now, we keep the existing rendering approach but prepare for future expansion
+    // In the future, panel elements like title, close button could be separate UI components
 }
