@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include "ui/UIManager.h"
 
 /**
  * Pure presentation layer View class
@@ -42,11 +43,14 @@ public:
 private:
     SDLManager& sdlManager_;
     
-    // UI Components - pure presentation
-    std::vector<std::unique_ptr<UIButton>> buttons_;
-    std::vector<std::unique_ptr<UICard>> cards_;
-    std::unique_ptr<UITooltip> tooltip_;
-    std::unique_ptr<UICraftingPanel> craftingPanel_;
+    // UI Framework
+    UIManager uiManager_;
+
+    // Components stored as shared pointers so UIManager can own references
+    std::vector<std::shared_ptr<UIButton>> buttons_;
+    std::vector<std::shared_ptr<UICard>> cards_;
+    std::shared_ptr<UITooltip> tooltip_;
+    std::shared_ptr<UICraftingPanel> craftingPanel_;
     
     // UI area definitions for hit testing
     std::unordered_map<std::string, SDL_Rect> uiAreas_;

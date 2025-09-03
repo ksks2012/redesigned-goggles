@@ -38,6 +38,7 @@ set(SOURCES
     src/ui/UIComponent.cpp
     src/ui/UIButton.cpp
     src/ui/UICard.cpp
+    src/ui/UIManager.cpp
     src/ui/UITooltip.cpp
     src/ui/UICraftingPanel.cpp
     src/ImGuiManager.cpp
@@ -67,6 +68,7 @@ set(LIB_SOURCES
     src/ui/UIComponent.cpp
     src/ui/UIButton.cpp
     src/ui/UICard.cpp
+    src/ui/UIManager.cpp
     src/ui/UITooltip.cpp
     src/ui/UICraftingPanel.cpp
     src/ImGuiManager.cpp

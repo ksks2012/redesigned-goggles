@@ -5,12 +5,15 @@
 View::View(SDLManager& sdl) 
     : sdlManager_(sdl) {
     
-    // Create UI components
+    // Create UI components and register them with the UI manager
     createButtons();
-    tooltip_ = std::make_unique<UITooltip>(sdlManager_);
-    
-    // Initialize crafting panel (no callbacks needed - pure presentation)
-    craftingPanel_ = std::make_unique<UICraftingPanel>(sdlManager_);
+    tooltip_ = std::make_shared<UITooltip>(sdlManager_);
+    craftingPanel_ = std::make_shared<UICraftingPanel>(sdlManager_);
+
+    // Register persistent UI components
+    for (auto& b : buttons_) uiManager_.addComponent(b, true);
+    uiManager_.addComponent(tooltip_, true);
+    uiManager_.addComponent(craftingPanel_, true);
     
     // Initialize UI areas for hit testing
     initializeUIAreas();
@@ -62,9 +65,8 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     }
     
     // Render buttons
-    for (auto& button : buttons_) {
-        button->render();
-    }
+    // Buttons and persistent UI are rendered by UIManager
+    uiManager_.renderAll();
     
     // Handle crafting panel with scroll support
     if (showCraftingPanel) {
