@@ -20,6 +20,8 @@ public:
 
     // Pure virtual function for rendering - must be implemented by derived classes
     virtual void render() = 0;
+    // Optional event handler for components (mouse/keyboard/scroll)
+    virtual void handleEvent(const SDL_Event& event) {}
     
     // Common rendering functions
     void renderBackground(SDL_Color color);

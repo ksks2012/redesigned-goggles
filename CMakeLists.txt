@@ -39,6 +39,7 @@ set(SOURCES
     src/ui/UIButton.cpp
     src/ui/UICard.cpp
     src/ui/UIManager.cpp
+    src/ui/UIContainer.cpp
     src/ui/UITooltip.cpp
     src/ui/UICraftingPanel.cpp
     src/ImGuiManager.cpp
@@ -69,6 +70,7 @@ set(LIB_SOURCES
     src/ui/UIButton.cpp
     src/ui/UICard.cpp
     src/ui/UIManager.cpp
+    src/ui/UIContainer.cpp
     src/ui/UITooltip.cpp
     src/ui/UICraftingPanel.cpp
     src/ImGuiManager.cpp
@@ -92,6 +94,9 @@ if(CATCH2_AVAILABLE)
         tests/test_inventory.cpp
         tests/test_crafting_system.cpp
         tests/test_data_manager.cpp
+    tests/test_ui_manager.cpp
+    tests/test_ui_container.cpp
+    tests/test_ui_integration.cpp
     )
     
     # Create test executable
