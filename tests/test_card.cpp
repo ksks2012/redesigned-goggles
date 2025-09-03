@@ -1,5 +1,5 @@
 #include "../lib/catch2/catch.hpp"
-#include "../include/Card.h"
+#include "Core/Card.h"
 
 TEST_CASE("Card creation and basic functionality", "[Card]") {
     SECTION("Basic card construction with type") {

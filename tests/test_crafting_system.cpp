@@ -1,7 +1,7 @@
 #include "../lib/catch2/catch.hpp"
-#include "../include/CraftingSystem.h"
-#include "../include/Inventory.h"
-#include "../include/Card.h"
+#include "Systems/CraftingSystem.h"
+#include "Core/Inventory.h"
+#include "Core/Card.h"
 
 TEST_CASE("Recipe creation and validation", "[CraftingSystem][Recipe]") {
     SECTION("Basic recipe construction") {

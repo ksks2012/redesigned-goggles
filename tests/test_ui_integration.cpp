@@ -13,9 +13,9 @@ public:
     TTF_Font* getFont() const { return nullptr; }
 };
 
-#include "ui/UIContainer.h"
-#include "ui/UIManager.h"
-#include "ui/UIComponent.h"
+#include "Interface/ui/UIContainer.h"
+#include "Interface/ui/UIManager.h"
+#include "Interface/ui/UIComponent.h"
 #include <memory>
 
 class MockCard : public UIComponent {

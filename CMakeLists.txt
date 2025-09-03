@@ -21,32 +21,36 @@ endif()
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include/Core)
+include_directories(${CMAKE_SOURCE_DIR}/include/Systems)
+include_directories(${CMAKE_SOURCE_DIR}/include/Interface)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
+include_directories(${CMAKE_SOURCE_DIR}/lib/nlohmann)
 
 # Source files
 set(SOURCES
-    src/SDLManager.cpp
-    src/Inventory.cpp
-    src/View.cpp
-    src/Controller.cpp
-    src/Game.cpp
-    src/SaveManager.cpp
-    src/CraftingSystem.cpp
-    src/DataManager.cpp
+    src/Core/Game.cpp
+    src/Core/Event.cpp
+    src/Core/Controller.cpp
+    src/Core/Inventory.cpp
+    src/Core/View.cpp
+    src/Systems/DataManager.cpp
+    src/Systems/SaveManager.cpp
+    src/Systems/SDLManager.cpp
+    src/Systems/ImGuiManager.cpp
+    src/Systems/CraftingSystem.cpp
+    src/Interface/GameInputHandler.cpp
+    src/Interface/ui/UIComponent.cpp
+    src/Interface/ui/UIButton.cpp
+    src/Interface/ui/UICard.cpp
+    src/Interface/ui/UIManager.cpp
+    src/Interface/ui/UIContainer.cpp
+    src/Interface/ui/UITooltip.cpp
+    src/Interface/ui/UICraftingPanel.cpp
+    src/Interface/editor/GameData.cpp
+    src/Interface/editor/GameEditor.cpp
+    src/Interface/editor/ConsoleEditor.cpp
     src/main.cpp
-    src/Event.cpp
-    src/ui/UIComponent.cpp
-    src/ui/UIButton.cpp
-    src/ui/UICard.cpp
-    src/ui/UIManager.cpp
-    src/ui/UIContainer.cpp
-    src/ui/UITooltip.cpp
-    src/ui/UICraftingPanel.cpp
-    src/ImGuiManager.cpp
-    src/editor/GameData.cpp
-    src/editor/GameEditor.cpp
-    src/editor/ConsoleEditor.cpp
-    src/GameInputHandler.cpp
 )
 
 # Create executable
@@ -57,27 +61,27 @@ target_link_libraries(Survive SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 
 # Create library for testing (excludes main.cpp)
 set(LIB_SOURCES
-    src/SDLManager.cpp
-    src/Inventory.cpp
-    src/View.cpp
-    src/Controller.cpp
-    src/Game.cpp
-    src/SaveManager.cpp
-    src/CraftingSystem.cpp
-    src/DataManager.cpp
-    src/Event.cpp
-    src/ui/UIComponent.cpp
-    src/ui/UIButton.cpp
-    src/ui/UICard.cpp
-    src/ui/UIManager.cpp
-    src/ui/UIContainer.cpp
-    src/ui/UITooltip.cpp
-    src/ui/UICraftingPanel.cpp
-    src/ImGuiManager.cpp
-    src/editor/GameData.cpp
-    src/editor/GameEditor.cpp
-    src/editor/ConsoleEditor.cpp
-    src/GameInputHandler.cpp
+    src/Core/Game.cpp
+    src/Core/Event.cpp
+    src/Core/Controller.cpp
+    src/Core/Inventory.cpp
+    src/Core/View.cpp
+    src/Systems/DataManager.cpp
+    src/Systems/SaveManager.cpp
+    src/Systems/SDLManager.cpp
+    src/Systems/ImGuiManager.cpp
+    src/Systems/CraftingSystem.cpp
+    src/Interface/GameInputHandler.cpp
+    src/Interface/ui/UIComponent.cpp
+    src/Interface/ui/UIButton.cpp
+    src/Interface/ui/UICard.cpp
+    src/Interface/ui/UIManager.cpp
+    src/Interface/ui/UIContainer.cpp
+    src/Interface/ui/UITooltip.cpp
+    src/Interface/ui/UICraftingPanel.cpp
+    src/Interface/editor/GameData.cpp
+    src/Interface/editor/GameEditor.cpp
+    src/Interface/editor/ConsoleEditor.cpp
 )
 
 add_library(SurviveLib STATIC ${LIB_SOURCES})

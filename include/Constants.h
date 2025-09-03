@@ -4,8 +4,8 @@
 #include <vector>
 #include <chrono>
 #include <random>
-#include "Card.h"
-#include "Event.h"
+#include "Core/Card.h"
+#include "Core/Event.h"
 
 namespace Constants {
 // SDLManager

@@ -1,6 +1,6 @@
 #include "../lib/catch2/catch.hpp"
-#include "../include/Inventory.h"
-#include "../include/Card.h"
+#include "Core/Inventory.h"
+#include "Core/Card.h"
 #include <thread>
 #include <chrono>
 
