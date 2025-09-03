@@ -53,6 +53,13 @@ constexpr int DRAG_CARD_OFFSET_Y = -25;
 constexpr int DRAG_TEXT_OFFSET_X = -95;
 constexpr int DRAG_TEXT_OFFSET_Y = -10;
 
+// Inventory area constraints (similar to crafting panel)
+constexpr int INVENTORY_AREA_X = 50;
+constexpr int INVENTORY_AREA_Y = 50;
+constexpr int INVENTORY_AREA_WIDTH = 250;
+constexpr int INVENTORY_AREA_HEIGHT = 400;
+constexpr int INVENTORY_MARGIN = 10;
+
 // View: Button rendering
 constexpr int BUTTON_X = 600;
 constexpr int BUTTON_MIN_WIDTH = 100;

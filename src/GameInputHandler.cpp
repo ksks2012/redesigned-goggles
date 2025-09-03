@@ -221,16 +221,16 @@ void GameInputHandler::handleScrollWheel(int x, int y, int deltaY) {
         craftingScrollOffset_ = std::max(0, std::min(craftingScrollOffset_, maxScrollOffset));
         
         std::cout << "Crafting panel scroll: " << craftingScrollOffset_ << "/" << maxScrollOffset << std::endl;
-    } else {
-        // Scroll inventory card list (pixel-based scrolling)
+    } else if (view_.isPointInUIArea(x, y, "inventoryArea")) {
+        // Scroll inventory card list only when mouse is over inventory area (pixel-based scrolling)
         inventoryScrollOffset_ -= deltaY * INVENTORY_SCROLL_SPEED;
         
-        // Calculate maximum scroll offset based on card count and spacing
+        // Calculate maximum scroll offset based on card count and spacing within inventory bounds
         auto& cards = inventory_.getCards();
-        // Calculate visible cards based on inventory panel height
-        int panelHeight = Constants::WINDOW_HEIGHT;
+        // Calculate visible cards based on inventory area height instead of window height
+        int inventoryHeight = Constants::INVENTORY_AREA_HEIGHT;
         int cardSpacing = Constants::CARD_SPACING;
-        int visibleCards = panelHeight / cardSpacing - 1;
+        int visibleCards = inventoryHeight / cardSpacing;
         int totalCards = static_cast<int>(cards.size());
         
         // Calculate max scroll in pixels based on card spacing
@@ -243,5 +243,8 @@ void GameInputHandler::handleScrollWheel(int x, int y, int deltaY) {
         inventoryScrollOffset_ = std::max(0, std::min(inventoryScrollOffset_, maxScrollOffset));
         
         std::cout << "Inventory scroll: " << inventoryScrollOffset_ << "/" << maxScrollOffset << std::endl;
+    } else {
+        // Mouse is not over any scrollable area
+        std::cout << "Scroll event ignored - mouse not over scrollable area" << std::endl;
     }
 }

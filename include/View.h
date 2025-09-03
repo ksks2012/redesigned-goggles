@@ -55,6 +55,7 @@ private:
     void createButtons();
     void updateCards(const Inventory& inventory, int scrollOffset = 0);
     void renderBackground();
+    void renderInventoryBackground();
     void renderHints();
     void updateTooltip(const Inventory& inventory, 
                       const Card* selectedCard, 

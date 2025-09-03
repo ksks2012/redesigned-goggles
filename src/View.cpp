@@ -22,10 +22,32 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     
     renderBackground();
     
-    // Update and render cards with scroll offset
+    // Render inventory area background (similar to crafting panel)
+    renderInventoryBackground();
+    
+    // Update and render cards with scroll offset and viewport clipping
     updateCards(inventory, inventoryScrollOffset);
+    
+    // Set up inventory viewport clipping
+    SDL_Rect inventoryViewport = {
+        Constants::INVENTORY_AREA_X,
+        Constants::INVENTORY_AREA_Y,
+        Constants::INVENTORY_AREA_WIDTH,
+        Constants::INVENTORY_AREA_HEIGHT
+    };
+    
+    // Render cards only within inventory bounds (strict boundary checking)
     for (auto& card : cards_) {
-        card->render();
+        int cardX = card->getX();
+        int cardY = card->getY();
+        
+        // Check if card is completely within inventory viewport
+        if (cardX >= inventoryViewport.x &&
+            cardX + Constants::CARD_WIDTH <= inventoryViewport.x + inventoryViewport.w &&
+            cardY >= inventoryViewport.y &&
+            cardY + Constants::CARD_HEIGHT <= inventoryViewport.y + inventoryViewport.h) {
+            card->render();
+        }
     }
     
     // Render dragged card if any
@@ -70,8 +92,9 @@ const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mou
     // Calculate card positions directly from inventory to avoid dependency on render state
     int index = 0;
     for (const auto& card : inventory.getCards()) {
-        int cardX = Constants::CARD_X;
-        int cardY = Constants::CARD_X + index * Constants::CARD_SPACING - scrollOffset;
+        // Use consistent coordinate system with updateCards
+        int cardX = Constants::INVENTORY_AREA_X + Constants::INVENTORY_MARGIN;
+        int cardY = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_MARGIN + index * Constants::CARD_SPACING - scrollOffset;
         
         // Check if mouse is within card bounds
         if (mouseX >= cardX && mouseX <= cardX + Constants::CARD_WIDTH && 
@@ -156,14 +179,30 @@ void View::updateCards(const Inventory& inventory, int scrollOffset) {
     
     const auto& allCards = inventory.getCards();
     
-    // Create UI cards for all cards with adjusted positions based on scroll offset
-    for (int i = 0; i < static_cast<int>(allCards.size()); ++i) {
+    // Calculate visible area for inventory (similar to crafting panel)
+    int inventoryAreaTop = Constants::INVENTORY_AREA_Y;
+    int inventoryAreaBottom = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_AREA_HEIGHT;
+    int visibleCards = Constants::INVENTORY_AREA_HEIGHT / Constants::CARD_SPACING;
+    
+    // Calculate scroll range - only render visible cards plus buffer
+    int startIndex = scrollOffset / Constants::CARD_SPACING;
+    int endIndex = std::min(startIndex + visibleCards + 2, static_cast<int>(allCards.size())); // +2 for buffer
+    startIndex = std::max(0, startIndex - 1); // -1 for buffer
+    
+    // Create UI cards only for visible range
+    for (int i = startIndex; i < endIndex; ++i) {
         const auto& card = allCards[i];
         // Calculate position with scroll offset applied
-        int cardY = Constants::CARD_X + i * Constants::CARD_SPACING - scrollOffset;
+        // Use inventory area coordinates instead of old card constants
+        int cardX = Constants::INVENTORY_AREA_X + Constants::INVENTORY_MARGIN;
+        int cardY = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_MARGIN + i * Constants::CARD_SPACING - scrollOffset;
         
-        auto uiCard = std::make_unique<UICard>(card, Constants::CARD_X, cardY, sdlManager_);
-        cards_.push_back(std::move(uiCard));
+        // Only create UI card if it's within or near the visible area
+        if (cardY + Constants::CARD_HEIGHT >= inventoryAreaTop - Constants::CARD_SPACING && 
+            cardY <= inventoryAreaBottom + Constants::CARD_SPACING) {
+            auto uiCard = std::make_unique<UICard>(card, cardX, cardY, sdlManager_);
+            cards_.push_back(std::move(uiCard));
+        }
     }
 }
 
@@ -172,6 +211,28 @@ void View::renderBackground() {
     SDL_SetRenderDrawColor(renderer, Constants::BACKGROUND_COLOR.r, Constants::BACKGROUND_COLOR.g,
                            Constants::BACKGROUND_COLOR.b, Constants::BACKGROUND_COLOR.a);
     SDL_RenderClear(renderer);
+}
+
+void View::renderInventoryBackground() {
+    SDL_Renderer* renderer = sdlManager_.getRenderer();
+    
+    // Render inventory area background (similar to crafting panel)
+    SDL_Rect inventoryBg = {
+        Constants::INVENTORY_AREA_X - Constants::INVENTORY_MARGIN,
+        Constants::INVENTORY_AREA_Y - Constants::INVENTORY_MARGIN,
+        Constants::INVENTORY_AREA_WIDTH + 2 * Constants::INVENTORY_MARGIN,
+        Constants::INVENTORY_AREA_HEIGHT + 2 * Constants::INVENTORY_MARGIN
+    };
+    
+    // Background
+    SDL_SetRenderDrawColor(renderer, Constants::PANEL_BG_COLOR.r, Constants::PANEL_BG_COLOR.g,
+                          Constants::PANEL_BG_COLOR.b, Constants::PANEL_BG_COLOR.a);
+    SDL_RenderFillRect(renderer, &inventoryBg);
+    
+    // Border
+    SDL_SetRenderDrawColor(renderer, Constants::BORDER_COLOR.r, Constants::BORDER_COLOR.g,
+                          Constants::BORDER_COLOR.b, Constants::BORDER_COLOR.a);
+    SDL_RenderDrawRect(renderer, &inventoryBg);
 }
 
 void View::renderHints() {
@@ -227,6 +288,10 @@ void View::initializeUIAreas() {
     
     uiAreas_["craftingPanel"] = {Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
                                 Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT};
+    
+    // Initialize inventory area for viewport clipping and interaction
+    uiAreas_["inventoryArea"] = {Constants::INVENTORY_AREA_X, Constants::INVENTORY_AREA_Y,
+                                Constants::INVENTORY_AREA_WIDTH, Constants::INVENTORY_AREA_HEIGHT};
 }
 
 SDL_Rect View::getButtonRect(const std::string& buttonName) const {
