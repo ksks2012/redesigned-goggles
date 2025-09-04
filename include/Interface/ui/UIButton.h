@@ -10,6 +10,7 @@ public:
     UIButton(const std::string& text, int x, int y, int minWidth, int height, 
              SDLManager& sdlManager, std::function<void()> onClick = nullptr);
     
+    void layout() override;
     void render() override;
     void handleClick(int mouseX, int mouseY);
     

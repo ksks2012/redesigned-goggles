@@ -11,13 +11,34 @@ void UIManager::clearDynamic() {
     dynamic_.clear();
 }
 
-void UIManager::renderAll() {
-    for (auto& c : persistent_) c->render();
-    for (auto& c : dynamic_) c->render();
+void UIManager::layoutAll() {
+    // Layout persistent components first, then dynamic components
+    for (auto& c : persistent_) {
+        c->layout();
+    }
+    for (auto& c : dynamic_) {
+        c->layout();
+    }
 }
 
-void UIManager::renderClipped(const SDL_Rect& clip) {
-    // Render only components fully inside clip rect
+void UIManager::renderAll() {
+    // Always perform layout before rendering for consistency
+    layoutAll();
+    
+    // Render persistent components first, then dynamic components
+    for (auto& c : persistent_) {
+        c->render();
+    }
+    for (auto& c : dynamic_) {
+        c->render();
+    }
+}
+
+void UIManager::layoutAndRenderClipped(const SDL_Rect& clip) {
+    // First perform layout for all components
+    layoutAll();
+    
+    // Then render only components fully inside clip rect
     auto renderIfInside = [&](const std::shared_ptr<UIComponent>& c) {
         SDL_Rect r = c->getRect();
         if (r.x >= clip.x && r.x + r.w <= clip.x + clip.w &&

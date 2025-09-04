@@ -14,6 +14,12 @@ UIButton::UIButton(const std::string& text, int x, int y, int minWidth, int heig
     updateSize();
 }
 
+void UIButton::layout() {
+    // Calculate button size based on text content
+    // This separates size calculation from rendering
+    updateSize();
+}
+
 void UIButton::render() {
     // Render background
     SDL_Color bgColor = enabled_ ? backgroundColor_ : Constants::RECIPE_DISABLED_TEXT;

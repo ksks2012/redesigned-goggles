@@ -10,6 +10,7 @@ class UITooltip : public UIComponent {
 public:
     UITooltip(SDLManager& sdlManager);
     
+    void layout() override;
     void render() override;
     void showForCard(const Card& card, int mouseX, int mouseY);
     void hide();

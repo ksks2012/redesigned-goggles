@@ -12,14 +12,17 @@ class SDLManager;
  * Abstract base class for all UI components
  * Provides common functionality for rendering backgrounds, borders, and text
  * Uses RAII for resource management
+ * Separates layout calculation from rendering for better testability and determinism
  */
 class UIComponent {
 public:
     UIComponent(int x, int y, int width, int height, SDLManager& sdlManager);
     virtual ~UIComponent() = default;
 
-    // Pure virtual function for rendering - must be implemented by derived classes
-    virtual void render() = 0;
+    // Layout and rendering separation
+    virtual void layout() {} // Optional layout calculation - implement if component needs layout logic
+    virtual void render() = 0; // Pure virtual function for rendering - must be implemented by derived classes
+    
     // Optional event handler for components (mouse/keyboard/scroll)
     virtual void handleEvent(const SDL_Event& event) {}
     

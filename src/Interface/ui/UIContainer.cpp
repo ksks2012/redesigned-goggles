@@ -26,20 +26,33 @@ int UIContainer::getMaxScroll() const {
     return std::max(0, total - height_);
 }
 
+void UIContainer::layout() {
+    // Calculate child positions based on scroll offset
+    // This separates layout calculation from rendering
+    int offsetY = y_ - scrollOffset_;
+    for (auto& c : children_) {
+        // First layout the child itself
+        c->layout();
+        
+        // Then position it within this container
+        c->setPosition(x_, offsetY);
+        offsetY += c->getHeight();
+    }
+}
+
 void UIContainer::render() {
     // Render children that are fully inside the container bounds
+    // Layout should already be calculated by this point
     SDL_Rect clip = {x_, y_, width_, height_};
     SDL_Renderer* renderer = sdlManager_.getRenderer();
     SDL_RenderSetClipRect(renderer, &clip);
 
-    int offsetY = y_ - scrollOffset_;
     for (auto& c : children_) {
-        c->setPosition(x_ + (c->getX() - x_), offsetY + (c->getY() - y_));
         SDL_Rect r = c->getRect();
+        // Only render if child is visible within container bounds
         if (r.y + r.h >= y_ && r.y <= y_ + height_) {
             c->render();
         }
-        offsetY += c->getHeight();
     }
 
     SDL_RenderSetClipRect(renderer, nullptr);

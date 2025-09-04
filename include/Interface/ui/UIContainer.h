@@ -20,7 +20,8 @@ public:
     int getScrollOffset() const { return scrollOffset_; }
     int getMaxScroll() const;
 
-    // Layout & render
+    // Layout & render separation
+    void layout() override;
     void render() override;
     void handleEvent(const SDL_Event& event) override;
 

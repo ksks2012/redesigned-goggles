@@ -98,9 +98,10 @@ if(CATCH2_AVAILABLE)
         tests/test_inventory.cpp
         tests/test_crafting_system.cpp
         tests/test_data_manager.cpp
-    tests/test_ui_manager.cpp
-    tests/test_ui_container.cpp
-    tests/test_ui_integration.cpp
+        tests/test_ui_manager.cpp
+        tests/test_ui_container.cpp
+        tests/test_ui_integration.cpp
+        tests/test_ui_layout.cpp
     )
     
     # Create test executable

@@ -8,6 +8,15 @@ UITooltip::UITooltip(SDLManager& sdlManager)
       mouseY_(0) {
 }
 
+void UITooltip::layout() {
+    // Recalculate size and position if tooltip is visible
+    // This separates layout calculation from rendering
+    if (visible_ && !tooltipLines_.empty()) {
+        calculateSize();
+        calculateOptimalPosition();
+    }
+}
+
 void UITooltip::render() {
     if (!visible_ || tooltipLines_.empty()) {
         return;
