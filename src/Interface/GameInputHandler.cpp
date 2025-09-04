@@ -7,7 +7,7 @@ GameInputHandler::GameInputHandler(IGameView& view,
                                   Inventory& inventory, 
                                   CraftingSystem& craftingSystem)
     : view_(view), inventory_(inventory), craftingSystem_(craftingSystem),
-      running_(true), selectedCard_(nullptr), showCraftingPanel_(false),
+      running_(true), selectedCard_(nullptr), previousSelectedCard_(nullptr), showCraftingPanel_(false),
       mouseX_(0), mouseY_(0), inventoryScrollOffset_(0), craftingScrollOffset_(0) {
 }
 
@@ -55,10 +55,16 @@ void GameInputHandler::handleMouseDown(int x, int y) {
     if (!showCraftingPanel_) {
         const Card* hoveredCard = view_.getHoveredCard(inventory_, x, y, inventoryScrollOffset_);
         if (hoveredCard) {
-            selectedCard_ = const_cast<Card*>(hoveredCard);
-            handleCardClick(hoveredCard);
-        } else {
+            bool isSameCard = (selectedCard_ == hoveredCard);
+            selectedCard_ = isSameCard ? nullptr : const_cast<Card*>(hoveredCard);
+            std::cout << "Card " << (isSameCard ? "deselected: " : "selected: ") << hoveredCard->name << std::endl;
+
+            handleCardClick(selectedCard_);
+            updateUICardSelection();
+        } else if (selectedCard_) {
+            std::cout << "Card deselected (empty area clicked)" << std::endl;
             selectedCard_ = nullptr;
+            updateUICardSelection();
         }
     }
 }
@@ -66,7 +72,13 @@ void GameInputHandler::handleMouseDown(int x, int y) {
 void GameInputHandler::handleMouseUp(int x, int y) {
     mouseX_ = x;
     mouseY_ = y;
-    selectedCard_ = nullptr;
+    
+    // Don't automatically clear selectedCard_ on mouse up
+    // Selection should persist until user clicks another card or empty area
+    // This allows for proper card selection behavior and dragging in the future
+    
+    // Only clear if we were dragging (future drag functionality)
+    // For now, maintain selection state
 }
 
 void GameInputHandler::handleMouseMotion(int x, int y) {
@@ -145,7 +157,16 @@ void GameInputHandler::handleButtonClick(const std::string& buttonName) {
 void GameInputHandler::handleCardClick(const Card* card) {
     // Card selection is handled in handleMouseDown
     // This method can be extended for card-specific actions
-    std::cout << "Selected card: " << card->name << std::endl;
+    // Use selectedCard_ for consistency instead of parameter
+    if (selectedCard_) {
+        view_.setCardSelection(selectedCard_);
+    } else {
+        // Handle deselection case
+        view_.setCardSelection(nullptr);
+    }
+    
+    // Update tracking for future reference
+    previousSelectedCard_ = selectedCard_;
 }
 
 void GameInputHandler::handleRecipeClick(int recipeIndex) {
@@ -247,4 +268,12 @@ void GameInputHandler::handleScrollWheel(int x, int y, int deltaY) {
         // Mouse is not over any scrollable area
         std::cout << "Scroll event ignored - mouse not over scrollable area" << std::endl;
     }
+}
+
+void GameInputHandler::updateUICardSelection() {
+    // Update UICard visual selection states to match game logic selection
+    view_.setCardSelection(selectedCard_);
+    
+    // Update tracking for future reference
+    previousSelectedCard_ = selectedCard_;
 }

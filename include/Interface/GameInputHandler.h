@@ -49,6 +49,9 @@ public:
     int getInventoryScrollOffset() const { return inventoryScrollOffset_; }
     int getCraftingScrollOffset() const { return craftingScrollOffset_; }
     
+    // UICard selection management
+    void updateUICardSelection();
+    
     // Callback setters for game operations
     void setSaveCallback(std::function<bool()> callback) { saveCallback_ = callback; }
     void setLoadCallback(std::function<bool()> callback) { loadCallback_ = callback; }
@@ -62,6 +65,7 @@ private:
     // Game state
     bool running_;
     Card* selectedCard_;
+    Card* previousSelectedCard_;  // Track previously selected card for UICard state management
     bool showCraftingPanel_;
     int mouseX_, mouseY_;
     

@@ -31,6 +31,9 @@ public:
     // UI component state
     virtual bool isButtonHovered(const std::string& buttonName, int mouseX, int mouseY) const = 0;
     virtual bool isCraftingPanelHovered(int mouseX, int mouseY) const = 0;
+    
+    // UICard selection management
+    virtual void setCardSelection(const Card* selectedCard) = 0;
 };
 
 /**

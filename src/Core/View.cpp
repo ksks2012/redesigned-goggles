@@ -1,6 +1,7 @@
 #include "Core/View.h"
 #include "Constants.h"
 #include <iostream>
+#include <map>
 
 View::View(SDLManager& sdl) 
     : sdlManager_(sdl) {
@@ -177,6 +178,14 @@ void View::createButtons() {
 }
 
 void View::updateCards(const Inventory& inventory, int scrollOffset) {
+    // Save current selection state indexed by card name and rarity (unique identifier)
+    std::unordered_map<std::string, bool> selectionState;
+    for (const auto& card : cards_) {
+        const auto& cardData = card->getCard();
+        std::string cardKey = cardData.name + "_" + std::to_string(cardData.rarity);
+        selectionState[cardKey] = card->isSelected();
+    }
+    
     cards_.clear();
     
     const auto& allCards = inventory.getCards();
@@ -203,6 +212,13 @@ void View::updateCards(const Inventory& inventory, int scrollOffset) {
         if (cardY + Constants::CARD_HEIGHT >= inventoryAreaTop - Constants::CARD_SPACING && 
             cardY <= inventoryAreaBottom + Constants::CARD_SPACING) {
             auto uiCard = std::make_unique<UICard>(card, cardX, cardY, sdlManager_);
+            
+            // Restore previous selection state if it exists
+            std::string cardKey = card.name + "_" + std::to_string(card.rarity);
+            if (selectionState.find(cardKey) != selectionState.end()) {
+                uiCard->setSelected(selectionState[cardKey]);
+            }
+            
             cards_.push_back(std::move(uiCard));
         }
     }
@@ -321,5 +337,21 @@ void View::renderScrollIndicators(const Inventory& inventory, int inventoryScrol
         SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 100, 100, 100, 100);
         SDL_Rect scrollHint = {Constants::CARD_X + 250, Constants::CARD_X + 10, 20, 5};
         SDL_RenderFillRect(sdlManager_.getRenderer(), &scrollHint);
+    }
+}
+
+void View::setCardSelection(const Card* selectedCard) {
+    // Update UICard selection states based on the currently selected card
+    for (auto& uiCard : cards_) {
+        if (uiCard) {
+            // Compare card content instead of memory addresses
+            // Cards are considered the same if name, quantity, and type match
+            bool isSelected = false;
+            if (selectedCard) {
+                // const Card& cardData = uiCard->getCard();
+                isSelected = uiCard->compareCard(*selectedCard);
+            }
+            uiCard->setSelected(isSelected);
+        }
     }
 }

@@ -12,6 +12,7 @@ public:
     
     void render() override;
     void renderDragging(int mouseX, int mouseY);
+    void handleEvent(const SDL_Event& event) override;
     
     // Card management
     void setCard(const Card& card);
@@ -21,6 +22,8 @@ public:
     void setSelected(bool selected);
     bool isSelected() const { return selected_; }
     
+    bool compareCard(const Card& other) const;
+
     // Layout management for card content
     void updateLayout();
 

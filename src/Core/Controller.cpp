@@ -46,6 +46,15 @@ void Controller::handleEvent(SDL_Event& event) {
             inputHandler_->handleKeyDown(event.key.keysym.sym);
             break;
     }
+    static Uint32 lastClickTime = 0;
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastClickTime < Constants::CLICK_INTERVAL_MS) {
+            // Ignore this click, too soon after previous
+            return;
+        }
+        lastClickTime = currentTime;
+    }
 }
 
 bool Controller::isRunning() const {

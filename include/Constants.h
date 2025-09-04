@@ -33,6 +33,7 @@ constexpr SDL_Color OVERLAY_COLOR = {0, 0, 0, 128}; // Semi-transparent black ov
 constexpr SDL_Color PANEL_BG_COLOR = {40, 40, 40, 255}; // Dark gray panel background
 constexpr SDL_Color BORDER_COLOR = {100, 100, 100, 255}; // Gray border
 constexpr SDL_Color SECONDARY_TEXT_COLOR = {180, 180, 180, 255}; // Light gray text
+constexpr SDL_Color SELECTED_BORDER_COLOR = {255, 0, 0, 255}; // Red border for selected items
 
 // Recipe Item Colors
 constexpr SDL_Color RECIPE_CAN_CRAFT_BG = {20, 60, 20, 255}; // Green background for craftable items
@@ -296,4 +297,6 @@ const std::string TOOLTIP_CRAFTING_VALUE = "Crafting Value";
 const std::string TOOLTIP_TRADE_VALUE = "Trade Value";
 const std::string TOOLTIP_EDIBLE = "Edible";
 const std::string TOOLTIP_BURNABLE = "Burnable";
+
+constexpr int CLICK_INTERVAL_MS = 100; // Milliseconds
 }

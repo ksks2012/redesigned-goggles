@@ -1,4 +1,6 @@
 #include "Interface/ui/UICard.h"
+#include <iostream>
+
 
 UICard::UICard(const Card& card, int x, int y, SDLManager& sdlManager)
     : UIContainer(x, y, Constants::CARD_WIDTH, Constants::CARD_HEIGHT, sdlManager),
@@ -11,11 +13,11 @@ void UICard::render() {
     // Render card background with rarity color
     SDL_Color rarityColor = getRarityColor();
     renderBackground(rarityColor);
-    
-    // Render border (highlight if selected)
-    SDL_Color borderColor = selected_ ? Constants::TEXT_COLOR : Constants::BORDER_COLOR;
-    renderBorder(borderColor, selected_ ? 2 : 1);
-    
+
+    // Render border (red highlight if selected, normal border otherwise)
+    SDL_Color borderColor = selected_ ? Constants::SELECTED_BORDER_COLOR : Constants::BORDER_COLOR;
+    renderBorder(borderColor, selected_ ? 3 : 1);
+
     // Render card text
     std::string displayText = getDisplayText();
     renderText(displayText, Constants::CARD_TEXT_OFFSET_X, Constants::CARD_TEXT_OFFSET_Y, 
@@ -44,6 +46,15 @@ void UICard::renderDragging(int mouseX, int mouseY) {
     setPosition(originalX, originalY);
 }
 
+void UICard::handleEvent(const SDL_Event& event) {
+    // UICard no longer handles its own click events directly
+    // All card selection is now managed centrally by GameInputHandler
+    // This prevents duplicate event processing and ensures consistent state
+    
+    // Call parent event handler for any container-specific events
+    UIContainer::handleEvent(event);
+}
+
 void UICard::setCard(const Card& card) {
     card_ = card;
     updateLayout();  // Update layout when card changes
@@ -51,6 +62,13 @@ void UICard::setCard(const Card& card) {
 
 void UICard::setSelected(bool selected) {
     selected_ = selected;
+}
+
+bool UICard::compareCard(const Card& other) const {
+    return (card_.name == other.name &&
+            card_.rarity == other.rarity &&
+            card_.quantity == other.quantity &&
+            card_.type == other.type);
 }
 
 void UICard::updateLayout() {

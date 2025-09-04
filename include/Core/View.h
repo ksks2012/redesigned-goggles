@@ -39,6 +39,9 @@ public:
     int getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset = 0) const override;
     bool isButtonHovered(const std::string& buttonName, int mouseX, int mouseY) const override;
     bool isCraftingPanelHovered(int mouseX, int mouseY) const override;
+    
+    // UICard selection management
+    void setCardSelection(const Card* selectedCard) override;
 
 private:
     SDLManager& sdlManager_;
