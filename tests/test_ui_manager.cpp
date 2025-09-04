@@ -13,8 +13,8 @@ public:
     TTF_Font* getFont() const { return nullptr; }
 };
 
-#include "ui/UIManager.h"
-#include "ui/UIComponent.h"
+#include "Interface/ui/UIManager.h"
+#include "Interface/ui/UIComponent.h"
 #include <memory>
 
 class MockComponent : public UIComponent {

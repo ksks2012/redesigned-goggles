@@ -13,9 +13,11 @@ public:
     TTF_Font* getFont() const { return nullptr; }
 };
 
-#include "ui/UIContainer.h"
-#include "ui/UIManager.h"
-#include "ui/UIComponent.h"
+#include "Interface/ui/UIContainer.h"
+#include "Interface/ui/UIManager.h"
+#include "Interface/ui/UIComponent.h"
+#include "Interface/ui/UICard.h"
+#include "Core/Card.h"
 #include <memory>
 
 class MockCard : public UIComponent {
@@ -49,4 +51,52 @@ TEST_CASE("Integration: inventory scroll and tooltip show/hide simulation") {
     auto c = inventory.hitTest(10,10);
     REQUIRE(c != nullptr);
     c->handleEvent(click);
+}
+
+TEST_CASE("UICard selection functionality") {
+    SDLManager dummy;
+    
+    // Create a test card
+    Card testCard("Iron", 1, CardType::METAL, 5);
+    UICard uiCard(testCard, 100, 100, dummy);
+    
+    SECTION("Initial state should be unselected") {
+        REQUIRE_FALSE(uiCard.isSelected());
+    }
+    
+    SECTION("Manual selection toggle works") {
+        uiCard.setSelected(true);
+        REQUIRE(uiCard.isSelected());
+        
+        uiCard.setSelected(false);
+        REQUIRE_FALSE(uiCard.isSelected());
+    }
+    
+    SECTION("Selection state management") {
+        // Initially unselected
+        REQUIRE_FALSE(uiCard.isSelected());
+        
+        // Test selecting the card
+        uiCard.setSelected(true);
+        REQUIRE(uiCard.isSelected());
+        
+        // Test deselecting the card
+        uiCard.setSelected(false);
+        REQUIRE_FALSE(uiCard.isSelected());
+        
+        // Test toggle behavior
+        uiCard.setSelected(!uiCard.isSelected());
+        REQUIRE(uiCard.isSelected());
+        
+        uiCard.setSelected(!uiCard.isSelected());
+        REQUIRE_FALSE(uiCard.isSelected());
+    }
+    
+    SECTION("Point inside detection works correctly") {
+        // Test point inside card bounds
+        REQUIRE(uiCard.isPointInside(110, 110)); // Within card bounds (card is at 100,100)
+        
+        // Test point outside card bounds  
+        REQUIRE_FALSE(uiCard.isPointInside(50, 50)); // Outside card bounds
+    }
 }

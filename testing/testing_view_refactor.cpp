@@ -1,10 +1,10 @@
 // Quick test of the refactored View layer
 #include <iostream>
-#include "View.h"
-#include "SDLManager.h"
-#include "Inventory.h"
-#include "CraftingSystem.h"
-#include "Card.h"
+#include "Core/View.h"
+#include "Systems/SDLManager.h"
+#include "Core/Inventory.h"
+#include "Systems/CraftingSystem.h"
+#include "Core/Card.h"
 
 int main() {
     std::cout << "Testing refactored View layer..." << std::endl;

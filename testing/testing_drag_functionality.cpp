@@ -1,11 +1,11 @@
 // Test drag functionality after refactoring
 #include <iostream>
-#include "GameInputHandler.h"
-#include "View.h"
-#include "SDLManager.h"
-#include "Inventory.h"
-#include "CraftingSystem.h"
-#include "Card.h"
+#include "Interface/GameInputHandler.h"
+#include "Core/View.h"
+#include "Systems/SDLManager.h"
+#include "Core/Inventory.h"
+#include "Systems/CraftingSystem.h"
+#include "Core/Card.h"
 
 int main() {
     std::cout << "Testing card dragging functionality..." << std::endl;
