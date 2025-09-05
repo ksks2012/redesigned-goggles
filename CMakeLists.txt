@@ -81,6 +81,7 @@ set(LIB_SOURCES
     src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
     src/Interface/ui/FocusableButton.cpp
+    src/Interface/ui/FocusableButtonTestWindow.cpp
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -88,6 +89,10 @@ set(LIB_SOURCES
 
 add_library(SurviveLib STATIC ${LIB_SOURCES})
 target_link_libraries(SurviveLib SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Create FocusableButton test executable
+add_executable(FocusableButtonTest testing/testing_focusable_button.cpp)
+target_link_libraries(FocusableButtonTest SurviveLib SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 
 # Add tests if Catch2 is available
 if(CATCH2_AVAILABLE)
