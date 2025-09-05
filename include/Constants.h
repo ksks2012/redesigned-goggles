@@ -41,6 +41,13 @@ constexpr SDL_Color RECIPE_CANNOT_CRAFT_BG = {60, 20, 20, 255}; // Red backgroun
 constexpr SDL_Color RECIPE_LOCKED_BG = {30, 30, 30, 255}; // Dark gray for locked recipes
 constexpr SDL_Color RECIPE_DISABLED_TEXT = {150, 150, 150, 255}; // Gray text for disabled items
 
+// Focusable Button Colors
+constexpr SDL_Color NORMAL_COLOR = {100, 100, 100, 255};
+constexpr SDL_Color HOVERED_COLOR = {120, 120, 120, 255};
+constexpr SDL_Color FOCUSED_COLOR = {80, 120, 180, 255};
+constexpr SDL_Color PRESSED_COLOR = {60, 60, 60, 255};
+constexpr SDL_Color FOCUS_BORDER_COLOR = {255, 255, 0, 255};
+
 
 // View: Card rendering
 constexpr int CARD_X = 50;

@@ -52,10 +52,20 @@ public:
     // UICard selection management
     void updateUICardSelection();
     
+    // Focus management requests (for Controller to use)
+    void requestFocusNext();
+    void requestFocusPrevious();
+    void requestClearFocus();
+    
     // Callback setters for game operations
     void setSaveCallback(std::function<bool()> callback) { saveCallback_ = callback; }
     void setLoadCallback(std::function<bool()> callback) { loadCallback_ = callback; }
     void setExploreCallback(std::function<void()> callback) { exploreCallback_ = callback; }
+    
+    // Focus management callbacks
+    void setFocusNextCallback(std::function<void()> callback) { focusNextCallback_ = callback; }
+    void setFocusPreviousCallback(std::function<void()> callback) { focusPreviousCallback_ = callback; }
+    void setClearFocusCallback(std::function<void()> callback) { clearFocusCallback_ = callback; }
 
 private:
     IGameView& view_;
@@ -77,6 +87,11 @@ private:
     std::function<bool()> saveCallback_;
     std::function<bool()> loadCallback_;
     std::function<void()> exploreCallback_;
+    
+    // Focus management callbacks
+    std::function<void()> focusNextCallback_;
+    std::function<void()> focusPreviousCallback_;
+    std::function<void()> clearFocusCallback_;
     
     // Input handling helpers
     void handleButtonClick(const std::string& buttonName);

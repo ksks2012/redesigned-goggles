@@ -93,7 +93,19 @@ void GameInputHandler::handleMouseWheel(int x, int y, int deltaY) {
 }
 
 void GameInputHandler::handleKeyDown(int keyCode) {
+    // Get modifier states
+    SDL_Keymod modifiers = SDL_GetModState();
+    
     switch (keyCode) {
+        case SDLK_TAB:
+            // Tab to focus next, Shift+Tab to focus previous
+            if (modifiers & KMOD_SHIFT) {
+                requestFocusPrevious();
+            } else {
+                requestFocusNext();
+            }
+            break;
+            
         case SDLK_s:
             // Press S to save
             if (saveCallback_) {
@@ -122,7 +134,10 @@ void GameInputHandler::handleKeyDown(int keyCode) {
             break;
 
         case SDLK_ESCAPE:
-            // ESC to close crafting panel or exit game
+            // ESC to clear focus, close crafting panel, or exit game
+            if (clearFocusCallback_) {
+                clearFocusCallback_();
+            }
             if (showCraftingPanel_) {
                 showCraftingPanel_ = false;
                 std::cout << "Crafting panel closed (ESC)" << std::endl;
@@ -276,4 +291,23 @@ void GameInputHandler::updateUICardSelection() {
     
     // Update tracking for future reference
     previousSelectedCard_ = selectedCard_;
+}
+
+// Focus management request methods
+void GameInputHandler::requestFocusNext() {
+    if (focusNextCallback_) {
+        focusNextCallback_();
+    }
+}
+
+void GameInputHandler::requestFocusPrevious() {
+    if (focusPreviousCallback_) {
+        focusPreviousCallback_();
+    }
+}
+
+void GameInputHandler::requestClearFocus() {
+    if (clearFocusCallback_) {
+        clearFocusCallback_();
+    }
 }

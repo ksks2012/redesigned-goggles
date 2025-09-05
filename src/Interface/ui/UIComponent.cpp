@@ -3,7 +3,8 @@
 #include <iostream>
 
 UIComponent::UIComponent(int x, int y, int width, int height, SDLManager& sdlManager)
-    : x_(x), y_(y), width_(width), height_(height), sdlManager_(sdlManager) {
+    : x_(x), y_(y), width_(width), height_(height), sdlManager_(sdlManager),
+      zOrder_(0), isModal_(false), hasFocus_(false) {
 }
 
 void UIComponent::renderBackground(SDL_Color color) {

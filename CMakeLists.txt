@@ -47,6 +47,7 @@ set(SOURCES
     src/Interface/ui/UIContainer.cpp
     src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
+    src/Interface/ui/FocusableButton.cpp
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -79,6 +80,7 @@ set(LIB_SOURCES
     src/Interface/ui/UIContainer.cpp
     src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
+    src/Interface/ui/FocusableButton.cpp
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -102,6 +104,7 @@ if(CATCH2_AVAILABLE)
         tests/test_ui_container.cpp
         tests/test_ui_integration.cpp
         tests/test_ui_layout.cpp
+        tests/test_ui_focus.cpp
     )
     
     # Create test executable
