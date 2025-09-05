@@ -38,6 +38,10 @@ TEST_CASE("UIManager hit-test and event routing") {
     auto a = std::make_shared<MockComponent>(0,0,100,100,dummy);
     auto b = std::make_shared<MockComponent>(10,10,50,50,dummy);
 
+    // Set z-orders to ensure b is on top (higher z-order)
+    a->setZOrder(1);
+    b->setZOrder(2);
+
     mgr.addComponent(a, true);
     mgr.addComponent(b, true);
 
