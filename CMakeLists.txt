@@ -45,6 +45,7 @@ set(SOURCES
     src/Interface/ui/UICard.cpp
     src/Interface/ui/UIManager.cpp
     src/Interface/ui/UIContainer.cpp
+    src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
     src/Interface/ui/FocusableButton.cpp
@@ -78,6 +79,7 @@ set(LIB_SOURCES
     src/Interface/ui/UICard.cpp
     src/Interface/ui/UIManager.cpp
     src/Interface/ui/UIContainer.cpp
+    src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
     src/Interface/ui/FocusableButton.cpp
@@ -107,6 +109,7 @@ if(CATCH2_AVAILABLE)
         tests/test_data_manager.cpp
         tests/test_ui_manager.cpp
         tests/test_ui_container.cpp
+        tests/test_ui_virtualization.cpp
         tests/test_ui_integration.cpp
         tests/test_ui_layout.cpp
         tests/test_ui_focus.cpp

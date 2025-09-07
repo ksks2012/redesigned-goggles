@@ -5,9 +5,9 @@
 #include "Core/Card.h"
 #include "Systems/CraftingSystem.h"
 #include "Interface/ui/UIButton.h"
-#include "Interface/ui/UICard.h"
 #include "Interface/ui/UITooltip.h"
 #include "Interface/ui/UICraftingPanel.h"
+#include "Interface/ui/UIInventoryContainer.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -51,7 +51,7 @@ private:
 
     // Components stored as shared pointers so UIManager can own references
     std::vector<std::shared_ptr<UIButton>> buttons_;
-    std::vector<std::shared_ptr<UICard>> cards_;
+    std::shared_ptr<UIInventoryContainer> inventoryContainer_;
     std::shared_ptr<UITooltip> tooltip_;
     std::shared_ptr<UICraftingPanel> craftingPanel_;
     
@@ -60,7 +60,7 @@ private:
     
     // Component management - pure rendering logic
     void createButtons();
-    void updateCards(const Inventory& inventory, int scrollOffset = 0);
+    void createInventoryContainer();
     void renderBackground();
     void renderInventoryBackground();
     void renderHints();
@@ -71,8 +71,7 @@ private:
                       int mouseY,
                       int scrollOffset = 0);
     
-    // Scroll-aware rendering helpers
-    void renderScrollableCardList(const Inventory& inventory, int scrollOffset);
+    // Scroll indicators
     void renderScrollIndicators(const Inventory& inventory, int inventoryScrollOffset, 
                                int craftingScrollOffset, bool showCraftingPanel, 
                                const CraftingSystem& craftingSystem);

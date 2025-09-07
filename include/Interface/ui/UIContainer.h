@@ -18,7 +18,7 @@ public:
 
     void setScrollOffset(int offset);
     int getScrollOffset() const { return scrollOffset_; }
-    int getMaxScroll() const;
+    virtual int getMaxScroll() const;
 
     // Layout & render separation
     void layout() override;

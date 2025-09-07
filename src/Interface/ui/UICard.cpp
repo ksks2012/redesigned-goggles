@@ -1,12 +1,11 @@
 #include "Interface/ui/UICard.h"
+#include "Systems/SDLManager.h"
 #include <iostream>
 
-
 UICard::UICard(const Card& card, int x, int y, SDLManager& sdlManager)
-    : UIContainer(x, y, Constants::CARD_WIDTH, Constants::CARD_HEIGHT, sdlManager),
+    : UIComponent(x, y, Constants::CARD_WIDTH, Constants::CARD_HEIGHT, sdlManager),
       card_(card),
       selected_(false) {
-    createCardContent();
 }
 
 void UICard::render() {
@@ -47,17 +46,13 @@ void UICard::renderDragging(int mouseX, int mouseY) {
 }
 
 void UICard::handleEvent(const SDL_Event& event) {
-    // UICard no longer handles its own click events directly
-    // All card selection is now managed centrally by GameInputHandler
-    // This prevents duplicate event processing and ensures consistent state
-    
-    // Call parent event handler for any container-specific events
-    UIContainer::handleEvent(event);
+    // Simple card event handling
+    // Card selection is managed by parent container
 }
 
 void UICard::setCard(const Card& card) {
     card_ = card;
-    updateLayout();  // Update layout when card changes
+    // No complex layout needed - just update the data
 }
 
 void UICard::setSelected(bool selected) {
@@ -69,18 +64,6 @@ bool UICard::compareCard(const Card& other) const {
             card_.rarity == other.rarity &&
             card_.quantity == other.quantity &&
             card_.type == other.type);
-}
-
-void UICard::updateLayout() {
-    // Clear existing children and recreate content
-    clearChildren();
-    createCardContent();
-}
-
-void UICard::createCardContent() {
-    // This method creates child components for the card content
-    // For now, we keep the existing rendering approach but prepare for future expansion
-    // In the future, card elements like title, quantity, type could be separate UI components
 }
 
 SDL_Color UICard::getRarityColor() const {

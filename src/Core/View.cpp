@@ -1,4 +1,5 @@
 #include "Core/View.h"
+#include "Interface/ui/UICard.h"
 #include "Constants.h"
 #include <iostream>
 #include <map>
@@ -8,11 +9,13 @@ View::View(SDLManager& sdl)
     
     // Create UI components and register them with the UI manager
     createButtons();
+    createInventoryContainer();
     tooltip_ = std::make_shared<UITooltip>(sdlManager_);
     craftingPanel_ = std::make_shared<UICraftingPanel>(sdlManager_);
 
     // Register persistent UI components
     for (auto& b : buttons_) uiManager_.addComponent(b, true);
+    uiManager_.addComponent(inventoryContainer_, true);
     uiManager_.addComponent(tooltip_, true);
     uiManager_.addComponent(craftingPanel_, true);
     
@@ -26,43 +29,24 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     
     renderBackground();
     
-    // Render inventory area background (similar to crafting panel)
+    // Render inventory area background
     renderInventoryBackground();
     
-    // Update and render cards with scroll offset and viewport clipping
-    updateCards(inventory, inventoryScrollOffset);
-    
-    // Set up inventory viewport clipping
-    SDL_Rect inventoryViewport = {
-        Constants::INVENTORY_AREA_X,
-        Constants::INVENTORY_AREA_Y,
-        Constants::INVENTORY_AREA_WIDTH,
-        Constants::INVENTORY_AREA_HEIGHT
-    };
-    
-    // Render cards only within inventory bounds (strict boundary checking)
-    for (auto& card : cards_) {
-        int cardX = card->getX();
-        int cardY = card->getY();
-        
-        // Check if card is completely within inventory viewport
-        if (cardX >= inventoryViewport.x &&
-            cardX + Constants::CARD_WIDTH <= inventoryViewport.x + inventoryViewport.w &&
-            cardY >= inventoryViewport.y &&
-            cardY + Constants::CARD_HEIGHT <= inventoryViewport.y + inventoryViewport.h) {
-            card->render();
-        }
+    // Update inventory container intelligently
+    if (inventoryContainer_->needsInventoryUpdate(inventory)) {
+        inventoryContainer_->updateInventory(inventory);
     }
+    inventoryContainer_->updateScroll(inventoryScrollOffset);
+    inventoryContainer_->setSelectedCard(selectedCard);
+    
+    // Render inventory (virtualized rendering happens inside the container)
+    inventoryContainer_->render();
     
     // Render dragged card if any
     if (selectedCard) {
-        // Find the UI card corresponding to the selected card
-        for (auto& uiCard : cards_) {
-            if (&uiCard->getCard() == selectedCard) {
-                uiCard->renderDragging(mouseX, mouseY);
-                break;
-            }
-        }
+        // Create temporary UICard for drag rendering
+        auto dragCard = std::make_unique<UICard>(*selectedCard, mouseX, mouseY, sdlManager_);
+        dragCard->renderDragging(mouseX, mouseY);
     }
     
     // Render buttons
@@ -92,22 +76,8 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
 }
 
 const Card* View::getHoveredCard(const Inventory& inventory, int mouseX, int mouseY, int scrollOffset) const {
-    // Calculate card positions directly from inventory to avoid dependency on render state
-    int index = 0;
-    for (const auto& card : inventory.getCards()) {
-        // Use consistent coordinate system with updateCards
-        int cardX = Constants::INVENTORY_AREA_X + Constants::INVENTORY_MARGIN;
-        int cardY = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_MARGIN + index * Constants::CARD_SPACING - scrollOffset;
-        
-        // Check if mouse is within card bounds
-        if (mouseX >= cardX && mouseX <= cardX + Constants::CARD_WIDTH && 
-            mouseY >= cardY && mouseY <= cardY + Constants::CARD_HEIGHT) {
-            return &card;
-        }
-        
-        index++;
-    }
-    return nullptr;
+    // Delegate to inventory container for virtualized hit testing
+    return inventoryContainer_->getCardAtPosition(mouseX, mouseY, scrollOffset);
 }
 
 bool View::isPointInUIArea(int x, int y, const std::string& areaName) const {
@@ -177,51 +147,15 @@ void View::createButtons() {
     buttons_.push_back(std::move(craftButton));
 }
 
-void View::updateCards(const Inventory& inventory, int scrollOffset) {
-    // Save current selection state indexed by card name and rarity (unique identifier)
-    std::unordered_map<std::string, bool> selectionState;
-    for (const auto& card : cards_) {
-        const auto& cardData = card->getCard();
-        std::string cardKey = cardData.name + "_" + std::to_string(cardData.rarity);
-        selectionState[cardKey] = card->isSelected();
-    }
-    
-    cards_.clear();
-    
-    const auto& allCards = inventory.getCards();
-    
-    // Calculate visible area for inventory (similar to crafting panel)
-    int inventoryAreaTop = Constants::INVENTORY_AREA_Y;
-    int inventoryAreaBottom = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_AREA_HEIGHT;
-    int visibleCards = Constants::INVENTORY_AREA_HEIGHT / Constants::CARD_SPACING;
-    
-    // Calculate scroll range - only render visible cards plus buffer
-    int startIndex = scrollOffset / Constants::CARD_SPACING;
-    int endIndex = std::min(startIndex + visibleCards + 2, static_cast<int>(allCards.size())); // +2 for buffer
-    startIndex = std::max(0, startIndex - 1); // -1 for buffer
-    
-    // Create UI cards only for visible range
-    for (int i = startIndex; i < endIndex; ++i) {
-        const auto& card = allCards[i];
-        // Calculate position with scroll offset applied
-        // Use inventory area coordinates instead of old card constants
-        int cardX = Constants::INVENTORY_AREA_X + Constants::INVENTORY_MARGIN;
-        int cardY = Constants::INVENTORY_AREA_Y + Constants::INVENTORY_MARGIN + i * Constants::CARD_SPACING - scrollOffset;
-        
-        // Only create UI card if it's within or near the visible area
-        if (cardY + Constants::CARD_HEIGHT >= inventoryAreaTop - Constants::CARD_SPACING && 
-            cardY <= inventoryAreaBottom + Constants::CARD_SPACING) {
-            auto uiCard = std::make_unique<UICard>(card, cardX, cardY, sdlManager_);
-            
-            // Restore previous selection state if it exists
-            std::string cardKey = card.name + "_" + std::to_string(card.rarity);
-            if (selectionState.find(cardKey) != selectionState.end()) {
-                uiCard->setSelected(selectionState[cardKey]);
-            }
-            
-            cards_.push_back(std::move(uiCard));
-        }
-    }
+void View::createInventoryContainer() {
+    // Create virtualized inventory container
+    inventoryContainer_ = std::make_shared<UIInventoryContainer>(
+        Constants::INVENTORY_AREA_X,
+        Constants::INVENTORY_AREA_Y, 
+        Constants::INVENTORY_AREA_WIDTH,
+        Constants::INVENTORY_AREA_HEIGHT,
+        sdlManager_
+    );
 }
 
 void View::renderBackground() {
@@ -341,17 +275,8 @@ void View::renderScrollIndicators(const Inventory& inventory, int inventoryScrol
 }
 
 void View::setCardSelection(const Card* selectedCard) {
-    // Update UICard selection states based on the currently selected card
-    for (auto& uiCard : cards_) {
-        if (uiCard) {
-            // Compare card content instead of memory addresses
-            // Cards are considered the same if name, quantity, and type match
-            bool isSelected = false;
-            if (selectedCard) {
-                // const Card& cardData = uiCard->getCard();
-                isSelected = uiCard->compareCard(*selectedCard);
-            }
-            uiCard->setSelected(isSelected);
-        }
+    // Delegate to inventory container
+    if (inventoryContainer_) {
+        inventoryContainer_->setSelectedCard(selectedCard);
     }
 }
