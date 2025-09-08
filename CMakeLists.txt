@@ -33,6 +33,8 @@ set(SOURCES
     src/Core/Event.cpp
     src/Core/Controller.cpp
     src/Core/Inventory.cpp
+    src/Core/Building.cpp
+    src/Core/BaseManager.cpp
     src/Core/View.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
@@ -67,6 +69,8 @@ set(LIB_SOURCES
     src/Core/Event.cpp
     src/Core/Controller.cpp
     src/Core/Inventory.cpp
+    src/Core/Building.cpp
+    src/Core/BaseManager.cpp
     src/Core/View.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
@@ -107,6 +111,7 @@ if(CATCH2_AVAILABLE)
         tests/test_inventory.cpp
         tests/test_crafting_system.cpp
         tests/test_data_manager.cpp
+        tests/test_base_building.cpp
         tests/test_ui_manager.cpp
         tests/test_ui_container.cpp
         tests/test_ui_virtualization.cpp
