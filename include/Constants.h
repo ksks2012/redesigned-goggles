@@ -306,4 +306,9 @@ const std::string TOOLTIP_EDIBLE = "Edible";
 const std::string TOOLTIP_BURNABLE = "Burnable";
 
 constexpr int CLICK_INTERVAL_MS = 100; // Milliseconds
+
+// Static constants for grid management
+constexpr int GRID_SIZE = 5;              // Initial grid size (5x5)
+constexpr int MAX_GRID_SIZE = 10;         // Maximum expandable size
+constexpr int INITIAL_UNLOCKED_SLOTS = 5; // Starting available slots
 }
