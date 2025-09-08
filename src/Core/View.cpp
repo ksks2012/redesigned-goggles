@@ -231,7 +231,7 @@ void View::updateTooltip(const Inventory& inventory, const Card* selectedCard,
     if (!selectedCard && !showCraftingPanel) {
         const Card* hoveredCard = getHoveredCard(inventory, mouseX, mouseY, scrollOffset);
         if (hoveredCard) {
-            tooltip_->showForCard(*hoveredCard, mouseX, mouseY);
+            tooltip_->showForProvider(*hoveredCard, mouseX, mouseY);
         } else {
             tooltip_->hide();
         }
