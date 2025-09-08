@@ -85,3 +85,28 @@ TooltipData Card::getTooltipData() const {
     
     return data;
 }
+
+CardDisplayData Card::getCardDisplayData() const {
+    CardDisplayData data;
+    
+    data.name = name;
+    data.type = getTypeString();
+    data.quantity = quantity;
+    data.rarity = rarity;
+    
+    // Use default rarity-based colors (don't set custom colors)
+    data.clearCustomColors();
+    
+    return data;
+}
+
+bool Card::isEquivalentForDisplay(const ICardComparable& other) const {
+    // Try to cast to Card for comparison
+    if (const Card* otherCard = dynamic_cast<const Card*>(&other)) {
+        return (name == otherCard->name &&
+                rarity == otherCard->rarity &&
+                quantity == otherCard->quantity &&
+                type == otherCard->type);
+    }
+    return false;
+}

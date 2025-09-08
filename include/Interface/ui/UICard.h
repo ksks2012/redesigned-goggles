@@ -1,35 +1,57 @@
 #pragma once
 #include "UIComponent.h"
-#include "Core/Card.h"
+#include "CardDisplayData.h"
+
+// Forward declaration to avoid including Card.h in the UI library
+class Card;
 
 /**
- * Simple card UI component for displaying individual inventory cards.
- * No longer inherits from UIContainer - just a lightweight display component.
+ * Generic card UI component for displaying any item as a card.
+ * Now uses CardDisplayData instead of being coupled to Card class.
  * Supports selection highlighting and drag rendering.
  */
 class UICard : public UIComponent {
 public:
+    // Generic constructor using CardDisplayData
+    UICard(const CardDisplayData& data, int x, int y, SDLManager& sdlManager);
+    
+    // Constructor for ICardDisplayProvider objects
+    UICard(const ICardDisplayProvider& provider, int x, int y, SDLManager& sdlManager);
+    
+    // Legacy constructor for backwards compatibility with Card objects
     UICard(const Card& card, int x, int y, SDLManager& sdlManager);
     
     void render() override;
     void renderDragging(int mouseX, int mouseY);
     void handleEvent(const SDL_Event& event) override;
     
-    // Card data management - lightweight updates without recreation
+    // Generic data management
+    void setDisplayData(const CardDisplayData& data);
+    void setFromProvider(const ICardDisplayProvider& provider);
+    const CardDisplayData& getDisplayData() const { return displayData_; }
+    
+    // Legacy methods for backwards compatibility
     void setCard(const Card& card);
-    const Card& getCard() const { return card_; }
+    const Card* getCard() const { return legacyCard_; }
+    const Card& getCardRef() const; // Returns reference, throws if no legacy card
     
     // Visual state
     void setSelected(bool selected);
     bool isSelected() const { return selected_; }
     
-    // Utility
-    bool compareCard(const Card& other) const;
+    // Utility - now works with generic display data
+    bool compareDisplayData(const CardDisplayData& other) const;
+    bool compareCard(const Card& other) const; // Legacy method
 
 private:
-    Card card_;
+    CardDisplayData displayData_;
     bool selected_;
     
+    // Legacy support - pointer to original Card object if available
+    const Card* legacyCard_;
+    
     SDL_Color getRarityColor() const;
+    SDL_Color getBackgroundColor() const;
+    SDL_Color getTextColor() const;
     std::string getDisplayText() const;
 };

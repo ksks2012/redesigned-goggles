@@ -216,8 +216,8 @@ void UIInventoryContainer::saveSelectionState() {
     selectionState_.clear();
     
     for (size_t i = 0; i < usedCards_; ++i) {
-        if (cardPool_[i]) {
-            const Card& card = cardPool_[i]->getCard();
+        if (cardPool_[i] && cardPool_[i]->getCard()) {
+            const Card& card = cardPool_[i]->getCardRef();
             selectionState_[getCardKey(card)] = cardPool_[i]->isSelected();
         }
     }

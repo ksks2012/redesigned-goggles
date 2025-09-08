@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include "Interface/ui/TooltipData.h"
+#include "Interface/ui/CardDisplayData.h"
 
 // Card type enumeration
 enum class CardType {
@@ -29,7 +30,7 @@ enum class AttributeType {
     TRADE_VALUE
 };
 
-struct Card : public ITooltipProvider {
+struct Card : public ITooltipProvider, public ICardDisplayProvider, public ICardComparable {
     std::string name;
     int rarity; // 1=Common, 2=Rare, 3=Legendary
     int quantity;
@@ -115,4 +116,10 @@ struct Card : public ITooltipProvider {
     
     // Implement ITooltipProvider interface
     TooltipData getTooltipData() const override;
+    
+    // Implement ICardDisplayProvider interface
+    CardDisplayData getCardDisplayData() const override;
+    
+    // Implement ICardComparable interface
+    bool isEquivalentForDisplay(const ICardComparable& other) const override;
 };
