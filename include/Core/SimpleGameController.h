@@ -6,6 +6,7 @@
 #include "Systems/CraftingSystem.h"
 #include "Core/Controller.h"
 #include "Core/View.h"
+#include "Core/BaseManager.h"
 #include "Systems/SaveManager.h"
 #include "Systems/ImGuiManager.h"
 #include "Interface/editor/GameEditor.h"
@@ -34,6 +35,7 @@ private:
     std::unique_ptr<SDLManager> sdlManager_;
     std::unique_ptr<Inventory> inventory_;
     std::unique_ptr<CraftingSystem> craftingSystem_;
+    std::unique_ptr<BaseManager> baseManager_;
     std::unique_ptr<View> view_;
     std::unique_ptr<Controller> controller_;
     std::unique_ptr<SaveManager> saveManager_;
@@ -59,6 +61,7 @@ public:
         : sdlManager_(std::make_unique<SDLManager>()),
           inventory_(std::make_unique<Inventory>()),
           craftingSystem_(std::make_unique<CraftingSystem>()),
+          baseManager_(std::make_unique<BaseManager>()),
           view_(nullptr), // Will be initialized after SDL
           controller_(nullptr), // Will be initialized after view
           saveManager_(std::make_unique<SaveManager>("game_save.json")),
@@ -232,7 +235,7 @@ private:
         view_ = std::make_unique<View>(*sdlManager_);
         
         // Initialize controller with all dependencies
-        controller_ = std::make_unique<Controller>(*inventory_, *view_, *craftingSystem_);
+        controller_ = std::make_unique<Controller>(*inventory_, *view_, *craftingSystem_, *baseManager_);
         
         // Set save and load callback functions
         controller_->setSaveCallback([this]() { return this->saveGame(); });

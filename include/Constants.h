@@ -69,7 +69,7 @@ constexpr int INVENTORY_AREA_HEIGHT = 400;
 constexpr int INVENTORY_MARGIN = 10;
 
 // View: Button rendering
-constexpr int BUTTON_X = 600;
+constexpr int BUTTON_X = 900;
 constexpr int BUTTON_MIN_WIDTH = 100;
 constexpr int BUTTON_HEIGHT = 40;
 constexpr int BUTTON_Y_ADD = 50;
@@ -278,7 +278,7 @@ inline const std::vector<Event> EXPLORATION_EVENTS = {
 };
 
 // Tooltip and hints
-constexpr int HINT_X = WINDOW_WIDTH - 300;
+constexpr int HINT_X = WINDOW_WIDTH - 200;
 constexpr int HINT_BOTTOM_OFFSET = 120;
 constexpr int HINT_LINE_SPACING = 28;
 constexpr const char* HINT_TITLE = "Hints:";
@@ -311,4 +311,19 @@ constexpr int CLICK_INTERVAL_MS = 100; // Milliseconds
 constexpr int GRID_SIZE = 5;              // Initial grid size (5x5)
 constexpr int MAX_GRID_SIZE = 10;         // Maximum expandable size
 constexpr int INITIAL_UNLOCKED_SLOTS = 5; // Starting available slots
+
+// Base building area constants (right half of screen)
+constexpr int BASE_AREA_START_X = 400;    // Base area starts at x = 400
+constexpr int BASE_AREA_END_X = 800;      // Base area ends at x = 800  
+constexpr int BASE_AREA_START_Y = 200;    // Base area starts at y = 200
+constexpr int BASE_AREA_END_Y = 600;      // Base area ends at y = 600
+constexpr int GRID_CELL_WIDTH = 80;       // Each grid cell is 80 pixels wide
+constexpr int GRID_CELL_HEIGHT = 80;      // Each grid cell is 80 pixels high
+
+// Building durability decay system
+constexpr int DURABILITY_DECAY_INTERVAL_MS = 60000; // 1 minute in milliseconds
+constexpr float DURABILITY_DECAY_RATE = 0.01f;      // 1% per interval
+
+// Drag and drop validation
+constexpr int DRAG_DROP_TOLERANCE = 10;   // Pixels tolerance for drop validation
 }

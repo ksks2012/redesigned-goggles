@@ -34,6 +34,18 @@ public:
                int inventoryScrollOffset = 0,
                int craftingScrollOffset = 0) override;
     
+    // Extended render method with drag support
+    void render(const Inventory& inventory, 
+               const Card* selectedCard, 
+               int mouseX, 
+               int mouseY, 
+               bool showCraftingPanel, 
+               const CraftingSystem& craftingSystem,
+               int inventoryScrollOffset,
+               int craftingScrollOffset,
+               bool isDragging,
+               const Card* draggedCard);
+    
     const Card* getHoveredCard(const Inventory& inventory, int mouseX, int mouseY, int scrollOffset = 0) const override;
     bool isPointInUIArea(int x, int y, const std::string& areaName) const override;
     int getClickedRecipeIndex(int mouseX, int mouseY, int scrollOffset = 0) const override;
@@ -70,6 +82,11 @@ private:
                       int mouseX, 
                       int mouseY,
                       int scrollOffset = 0);
+    
+    // Base building area rendering
+    void renderBaseArea(int mouseX, int mouseY, bool isDragging, const Card* draggedCard);
+    void renderBuildingGrid(int mouseX, int mouseY, bool isDragging, const Card* draggedCard);
+    void renderGridCell(int gridX, int gridY, bool isHovered, bool isValidDrop);
     
     // Scroll indicators
     void renderScrollIndicators(const Inventory& inventory, int inventoryScrollOffset, 

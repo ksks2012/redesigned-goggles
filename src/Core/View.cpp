@@ -26,8 +26,20 @@ View::View(SDLManager& sdl)
 void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
                   bool showCraftingPanel, const CraftingSystem& craftingSystem,
                   int inventoryScrollOffset, int craftingScrollOffset) {
+    // Delegate to extended render method without dragging
+    render(inventory, selectedCard, mouseX, mouseY, showCraftingPanel, craftingSystem,
+           inventoryScrollOffset, craftingScrollOffset, false, nullptr);
+}
+
+void View::render(const Inventory& inventory, const Card* selectedCard, int mouseX, int mouseY, 
+                  bool showCraftingPanel, const CraftingSystem& craftingSystem,
+                  int inventoryScrollOffset, int craftingScrollOffset,
+                  bool isDragging, const Card* draggedCard) {
     
     renderBackground();
+    
+    // Render base building area (right half of screen)
+    renderBaseArea(mouseX, mouseY, isDragging, draggedCard);
     
     // Render inventory area background
     renderInventoryBackground();
@@ -43,8 +55,12 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     inventoryContainer_->render();
     
     // Render dragged card if any
-    if (selectedCard) {
+    if (isDragging && draggedCard) {
         // Create temporary UICard for drag rendering
+        auto dragCard = std::make_unique<UICard>(*draggedCard, mouseX, mouseY, sdlManager_);
+        dragCard->renderDragging(mouseX, mouseY);
+    } else if (selectedCard) {
+        // Render selected card highlight if not dragging
         auto dragCard = std::make_unique<UICard>(*selectedCard, mouseX, mouseY, sdlManager_);
         dragCard->renderDragging(mouseX, mouseY);
     }
@@ -279,4 +295,90 @@ void View::setCardSelection(const Card* selectedCard) {
     if (inventoryContainer_) {
         inventoryContainer_->setSelectedCard(selectedCard);
     }
+}
+
+void View::renderBaseArea(int mouseX, int mouseY, bool isDragging, const Card* draggedCard) {
+    // Render base area background (right half of screen)
+    SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 30, 30, 30, 255); // Dark gray background
+    SDL_Rect baseAreaRect = {
+        Constants::BASE_AREA_START_X,
+        Constants::BASE_AREA_START_Y,
+        Constants::BASE_AREA_END_X - Constants::BASE_AREA_START_X,
+        Constants::BASE_AREA_END_Y - Constants::BASE_AREA_START_Y
+    };
+    SDL_RenderFillRect(sdlManager_.getRenderer(), &baseAreaRect);
+    
+    // Render building grid
+    renderBuildingGrid(mouseX, mouseY, isDragging, draggedCard);
+    
+    // Render area label
+    SDL_Color labelColor = {200, 200, 200, 255};
+    // Note: For now, skip text rendering to focus on grid functionality
+    // Text rendering would require creating a temporary UIComponent
+    // TODO: Implement proper text rendering for area labels
+}
+
+void View::renderBuildingGrid(int mouseX, int mouseY, bool isDragging, const Card* draggedCard) {
+    bool isMouseInBaseArea = mouseX >= Constants::BASE_AREA_START_X && 
+                            mouseX <= Constants::BASE_AREA_END_X &&
+                            mouseY >= Constants::BASE_AREA_START_Y && 
+                            mouseY <= Constants::BASE_AREA_END_Y;
+    
+    // Calculate hovered grid position
+    int hoveredGridX = -1, hoveredGridY = -1;
+    if (isMouseInBaseArea) {
+        hoveredGridX = (mouseX - Constants::BASE_AREA_START_X) / Constants::GRID_CELL_WIDTH;
+        hoveredGridY = (mouseY - Constants::BASE_AREA_START_Y) / Constants::GRID_CELL_HEIGHT;
+        
+        // Clamp to valid range
+        hoveredGridX = std::max(0, std::min(Constants::GRID_SIZE - 1, hoveredGridX));
+        hoveredGridY = std::max(0, std::min(Constants::GRID_SIZE - 1, hoveredGridY));
+    }
+    
+    // Render grid cells
+    for (int y = 0; y < Constants::GRID_SIZE; y++) {
+        for (int x = 0; x < Constants::GRID_SIZE; x++) {
+            bool isHovered = (x == hoveredGridX && y == hoveredGridY);
+            bool isValidDrop = false;
+            
+            // Check if drop is valid for dragged card
+            if (isDragging && draggedCard && isHovered) {
+                // This would require access to BaseManager - for now, assume valid
+                isValidDrop = true; // Simplified for demo
+            }
+            
+            renderGridCell(x, y, isHovered, isValidDrop);
+        }
+    }
+}
+
+void View::renderGridCell(int gridX, int gridY, bool isHovered, bool isValidDrop) {
+    // Calculate screen position
+    int screenX = Constants::BASE_AREA_START_X + gridX * Constants::GRID_CELL_WIDTH;
+    int screenY = Constants::BASE_AREA_START_Y + gridY * Constants::GRID_CELL_HEIGHT;
+    
+    SDL_Rect cellRect = {screenX, screenY, Constants::GRID_CELL_WIDTH, Constants::GRID_CELL_HEIGHT};
+    
+    // Choose cell color based on state
+    if (isHovered && isValidDrop) {
+        SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 0, 150, 0, 100); // Green for valid drop
+    } else if (isHovered) {
+        SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 150, 150, 0, 100); // Yellow for hover
+    } else {
+        SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 50, 50, 50, 100); // Dark gray for normal
+    }
+    
+    // Fill cell
+    SDL_RenderFillRect(sdlManager_.getRenderer(), &cellRect);
+    
+    // Render cell border
+    SDL_SetRenderDrawColor(sdlManager_.getRenderer(), 100, 100, 100, 255);
+    SDL_RenderDrawRect(sdlManager_.getRenderer(), &cellRect);
+    
+    // Render grid coordinates (for debugging/development)
+    std::string coordText = std::to_string(gridX) + "," + std::to_string(gridY);
+    SDL_Color textColor = {150, 150, 150, 255};
+    // Note: For now, skip coordinate text rendering to focus on grid functionality
+    // Text rendering would require creating a temporary UIComponent
+    // TODO: Implement proper coordinate display for debugging
 }

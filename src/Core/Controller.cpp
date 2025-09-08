@@ -4,11 +4,22 @@
 #include <thread>
 #include <iostream>
 
-Controller::Controller(Inventory& inv, View& v, CraftingSystem& crafting) 
-    : inventory_(inv), view_(v), craftingSystem_(crafting) {
+Controller::Controller(Inventory& inv, View& v, CraftingSystem& crafting, BaseManager& baseManager) 
+    : inventory_(inv), view_(v), craftingSystem_(crafting), baseManager_(baseManager) {
     
-    // Create input handler with view interface
-    inputHandler_ = std::make_unique<GameInputHandler>(view_, inventory_, craftingSystem_);
+    // Create base building controller
+    baseBuildingController_ = std::make_shared<BaseBuildingController>(baseManager, inventory_);
+    
+    // Set up notification callback for user feedback
+    baseBuildingController_->setNotificationCallback([this](const std::string& message) {
+        std::cout << "[Base Building] " << message << std::endl;
+    });
+    
+    // Start durability decay system
+    baseBuildingController_->startDurabilityDecay();
+    
+    // Create input handler with base building support
+    inputHandler_ = std::make_unique<GameInputHandler>(view_, inventory_, craftingSystem_, baseBuildingController_);
     
     // Set up callbacks for input handler
     inputHandler_->setExploreCallback([this]() { handleExplore(); });
@@ -65,7 +76,8 @@ void Controller::updateView() {
     view_.render(inventory_, inputHandler_->getSelectedCard(), 
                 inputHandler_->getMouseX(), inputHandler_->getMouseY(), 
                 inputHandler_->isShowingCraftingPanel(), craftingSystem_,
-                inputHandler_->getInventoryScrollOffset(), inputHandler_->getCraftingScrollOffset());
+                inputHandler_->getInventoryScrollOffset(), inputHandler_->getCraftingScrollOffset(),
+                inputHandler_->isDragging(), inputHandler_->getDraggedCard());
 }
 
 void Controller::organizeInventory() {

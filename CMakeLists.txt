@@ -35,6 +35,7 @@ set(SOURCES
     src/Core/Inventory.cpp
     src/Core/Building.cpp
     src/Core/BaseManager.cpp
+    src/Core/BaseBuildingController.cpp
     src/Core/View.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp

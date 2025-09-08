@@ -2,7 +2,9 @@
 #include "Core/IGameView.h"
 #include "Core/Inventory.h"
 #include "Systems/CraftingSystem.h"
+#include "Core/BaseBuildingController.h"
 #include <functional>
+#include <memory>
 
 /**
  * Interface for handling game input events
@@ -30,7 +32,8 @@ class GameInputHandler : public IInputHandler {
 public:
     GameInputHandler(IGameView& view, 
                     Inventory& inventory, 
-                    CraftingSystem& craftingSystem);
+                    CraftingSystem& craftingSystem,
+                    std::shared_ptr<BaseBuildingController> baseBuildingController = nullptr);
     
     // IInputHandler implementation
     void handleMouseDown(int x, int y) override;
@@ -48,6 +51,12 @@ public:
     int getMouseY() const { return mouseY_; }
     int getInventoryScrollOffset() const { return inventoryScrollOffset_; }
     int getCraftingScrollOffset() const { return craftingScrollOffset_; }
+    
+    // Drag and drop state
+    bool isDragging() const { return isDragging_; }
+    const Card* getDraggedCard() const { return draggedCard_; }
+    int getDragStartX() const { return dragStartX_; }
+    int getDragStartY() const { return dragStartY_; }
     
     // UICard selection management
     void updateUICardSelection();
@@ -71,6 +80,7 @@ private:
     IGameView& view_;
     Inventory& inventory_;
     CraftingSystem& craftingSystem_;
+    std::shared_ptr<BaseBuildingController> baseBuildingController_;
     
     // Game state
     bool running_;
@@ -78,6 +88,12 @@ private:
     Card* previousSelectedCard_;  // Track previously selected card for UICard state management
     bool showCraftingPanel_;
     int mouseX_, mouseY_;
+    
+    // Drag and drop state
+    bool isDragging_;
+    Card* draggedCard_;
+    int dragStartX_, dragStartY_;
+    static constexpr int DRAG_THRESHOLD = 5; // Minimum pixels to start dragging
     
     // Scroll states for different UI areas
     int inventoryScrollOffset_;  // Scroll offset for inventory card list
@@ -102,4 +118,10 @@ private:
     void removeFirstCard();
     void toggleCraftingPanel();
     void craftRecipe(int recipeIndex);
+    
+    // Drag and drop helpers
+    void startDrag(Card* card, int startX, int startY);
+    void updateDrag(int currentX, int currentY);
+    void endDrag(int endX, int endY);
+    bool shouldStartDrag(int currentX, int currentY) const;
 };

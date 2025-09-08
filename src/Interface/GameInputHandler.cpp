@@ -1,14 +1,18 @@
 #include "Interface/GameInputHandler.h"
 #include "Constants.h"
+#include "Core/BaseManager.h"
 #include <iostream>
 #include <random>
 
 GameInputHandler::GameInputHandler(IGameView& view, 
                                   Inventory& inventory, 
-                                  CraftingSystem& craftingSystem)
+                                  CraftingSystem& craftingSystem,
+                                  std::shared_ptr<BaseBuildingController> baseBuildingController)
     : view_(view), inventory_(inventory), craftingSystem_(craftingSystem),
+      baseBuildingController_(baseBuildingController),
       running_(true), selectedCard_(nullptr), previousSelectedCard_(nullptr), showCraftingPanel_(false),
-      mouseX_(0), mouseY_(0), inventoryScrollOffset_(0), craftingScrollOffset_(0) {
+      mouseX_(0), mouseY_(0), inventoryScrollOffset_(0), craftingScrollOffset_(0),
+      isDragging_(false), draggedCard_(nullptr), dragStartX_(0), dragStartY_(0) {
 }
 
 void GameInputHandler::handleMouseDown(int x, int y) {
@@ -61,6 +65,16 @@ void GameInputHandler::handleMouseDown(int x, int y) {
 
             handleCardClick(selectedCard_);
             updateUICardSelection();
+            
+            // Start potential drag if card is selected and buildable
+            if (selectedCard_ && baseBuildingController_) {
+                if (BuildingConversion::isCardBuildable(selectedCard_->name)) {
+                    // Store drag start position but don't start dragging yet
+                    dragStartX_ = x;
+                    dragStartY_ = y;
+                }
+            }
+            
         } else if (selectedCard_) {
             std::cout << "Card deselected (empty area clicked)" << std::endl;
             selectedCard_ = nullptr;
@@ -73,6 +87,12 @@ void GameInputHandler::handleMouseUp(int x, int y) {
     mouseX_ = x;
     mouseY_ = y;
     
+    // Handle drag end
+    if (isDragging_) {
+        endDrag(x, y);
+        return;
+    }
+    
     // Don't automatically clear selectedCard_ on mouse up
     // Selection should persist until user clicks another card or empty area
     // This allows for proper card selection behavior and dragging in the future
@@ -84,6 +104,18 @@ void GameInputHandler::handleMouseUp(int x, int y) {
 void GameInputHandler::handleMouseMotion(int x, int y) {
     mouseX_ = x;
     mouseY_ = y;
+    
+    // Check if we should start dragging
+    if (!isDragging_ && selectedCard_ && baseBuildingController_) {
+        if (BuildingConversion::isCardBuildable(selectedCard_->name) && shouldStartDrag(x, y)) {
+            startDrag(selectedCard_, dragStartX_, dragStartY_);
+        }
+    }
+    
+    // Update drag position if currently dragging
+    if (isDragging_) {
+        updateDrag(x, y);
+    }
 }
 
 void GameInputHandler::handleMouseWheel(int x, int y, int deltaY) {
@@ -310,4 +342,63 @@ void GameInputHandler::requestClearFocus() {
     if (clearFocusCallback_) {
         clearFocusCallback_();
     }
+}
+
+// Drag and drop implementation
+void GameInputHandler::startDrag(Card* card, int startX, int startY) {
+    if (!card || !baseBuildingController_) return;
+    
+    isDragging_ = true;
+    draggedCard_ = card;
+    dragStartX_ = startX;
+    dragStartY_ = startY;
+    
+    std::cout << "Started dragging card: " << card->name << " from (" << startX << ", " << startY << ")" << std::endl;
+}
+
+void GameInputHandler::updateDrag(int currentX, int currentY) {
+    if (!isDragging_ || !draggedCard_) return;
+    
+    // Visual feedback could be added here
+    // For example, highlighting valid drop zones
+    if (baseBuildingController_->isInBaseArea(currentX, currentY)) {
+        auto [gridX, gridY] = baseBuildingController_->calculateGridPosition(currentX, currentY);
+        // Could highlight grid cell at (gridX, gridY) as potential drop target
+    }
+}
+
+void GameInputHandler::endDrag(int endX, int endY) {
+    if (!isDragging_ || !draggedCard_ || !baseBuildingController_) {
+        isDragging_ = false;
+        draggedCard_ = nullptr;
+        return;
+    }
+    
+    std::cout << "Ending drag at (" << endX << ", " << endY << ")" << std::endl;
+    
+    // Try to place building if dropped in base area
+    bool placementSuccess = baseBuildingController_->handleCardDrop(draggedCard_, endX, endY);
+    
+    if (placementSuccess) {
+        std::cout << "Successfully placed building from dragged card!" << std::endl;
+        // Clear selection after successful placement
+        selectedCard_ = nullptr;
+        updateUICardSelection();
+    } else {
+        std::cout << "Failed to place building: " << baseBuildingController_->getErrorMessage(baseBuildingController_->getLastError()) << std::endl;
+    }
+    
+    // Reset drag state
+    isDragging_ = false;
+    draggedCard_ = nullptr;
+}
+
+bool GameInputHandler::shouldStartDrag(int currentX, int currentY) const {
+    if (!selectedCard_) return false;
+    
+    int deltaX = currentX - dragStartX_;
+    int deltaY = currentY - dragStartY_;
+    int distance = deltaX * deltaX + deltaY * deltaY;
+    
+    return distance >= (DRAG_THRESHOLD * DRAG_THRESHOLD);
 }

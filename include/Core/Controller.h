@@ -6,6 +6,8 @@
 #include "Core/Inventory.h"
 #include "Core/View.h"
 #include "Core/Event.h"
+#include "Core/BaseManager.h"
+#include "Core/BaseBuildingController.h"
 #include "Systems/CraftingSystem.h"
 #include "Interface/GameInputHandler.h"
 
@@ -17,7 +19,7 @@
  */
 class Controller {
 public:
-    Controller(Inventory& inv, View& v, CraftingSystem& crafting);
+    Controller(Inventory& inv, View& v, CraftingSystem& crafting, BaseManager& baseManager);
     
     // Main game loop operations
     void handleEvents();
@@ -38,9 +40,11 @@ private:
     Inventory& inventory_;
     View& view_;
     CraftingSystem& craftingSystem_;
+    BaseManager& baseManager_;
     
     // Input handling delegation
     std::unique_ptr<GameInputHandler> inputHandler_;
+    std::shared_ptr<BaseBuildingController> baseBuildingController_;
     
     // Game state
     bool organizeInventoryEnabled_ = true;
