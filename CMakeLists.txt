@@ -37,6 +37,7 @@ set(SOURCES
     src/Core/BaseManager.cpp
     src/Core/BaseBuildingController.cpp
     src/Core/View.cpp
+    src/Core/Card.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
     src/Systems/SDLManager.cpp
@@ -73,6 +74,7 @@ set(LIB_SOURCES
     src/Core/Building.cpp
     src/Core/BaseManager.cpp
     src/Core/View.cpp
+    src/Core/Card.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
     src/Systems/SDLManager.cpp

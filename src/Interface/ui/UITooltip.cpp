@@ -36,81 +36,53 @@ void UITooltip::render() {
     }
 }
 
-void UITooltip::showForCard(const Card& card, int mouseX, int mouseY) {
+void UITooltip::show(const TooltipData& data, int mouseX, int mouseY) {
     mouseX_ = mouseX;
     mouseY_ = mouseY;
     
-    generateCardInfo(card);
+    generateDisplayLines(data);
     calculateSize();
     calculateOptimalPosition();
     
     visible_ = true;
 }
 
+void UITooltip::showForProvider(const ITooltipProvider& provider, int mouseX, int mouseY) {
+    show(provider.getTooltipData(), mouseX, mouseY);
+}
+
 void UITooltip::hide() {
     visible_ = false;
 }
 
-void UITooltip::generateCardInfo(const Card& card) {
+void UITooltip::generateDisplayLines(const TooltipData& data) {
     tooltipLines_.clear();
-
-    // Title: name and type
-    tooltipLines_.push_back(card.name + " (" + card.getTypeString() + ")");
-
-    // Basic info
-    tooltipLines_.push_back(Constants::TOOLTIP_RARITY + ": " + std::to_string(card.rarity) +
-                           (card.rarity == 1 ? " (" + Constants::TOOLTIP_COMMON + ")" :
-                            card.rarity == 2 ? " (" + Constants::TOOLTIP_RARE + ")" : " (" + Constants::TOOLTIP_LEGENDARY + ")"));
-
-    tooltipLines_.push_back(Constants::TOOLTIP_QUANTITY + ": " + std::to_string(card.quantity));
-
-    // Attribute info
-    if (card.hasAttribute(AttributeType::WEIGHT)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_WEIGHT + ": " + to_string_with_precision(card.getAttribute(AttributeType::WEIGHT), 2) + "kg");
-        if (card.quantity > 1) {
-            tooltipLines_.push_back(Constants::TOOLTIP_TOTAL_WEIGHT + ": " + to_string_with_precision(card.getTotalWeight(), 2) + "kg");
+    
+    if (data.isEmpty()) {
+        return;
+    }
+    
+    // Add title
+    if (!data.title.empty()) {
+        if (!data.subtitle.empty()) {
+            tooltipLines_.push_back(data.title + " (" + data.subtitle + ")");
+        } else {
+            tooltipLines_.push_back(data.title);
         }
     }
-
-    if (card.hasAttribute(AttributeType::NUTRITION)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_NUTRITION + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::NUTRITION))));
+    
+    // Add attributes
+    for (const auto& attr : data.attributes) {
+        std::string line = attr.name + ": " + attr.value;
+        if (!attr.unit.empty()) {
+            line += attr.unit;
+        }
+        tooltipLines_.push_back(line);
     }
-
-    if (card.hasAttribute(AttributeType::ATTACK)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_ATTACK + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::ATTACK))));
-    }
-
-    if (card.hasAttribute(AttributeType::DEFENSE)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_DEFENSE + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::DEFENSE))));
-    }
-
-    if (card.hasAttribute(AttributeType::HEALING)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_HEALING + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::HEALING))));
-    }
-
-    if (card.hasAttribute(AttributeType::DURABILITY)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_DURABILITY + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::DURABILITY))));
-    }
-
-    if (card.hasAttribute(AttributeType::BURN_VALUE)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_BURN_VALUE + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::BURN_VALUE))));
-    }
-
-    if (card.hasAttribute(AttributeType::CRAFTING_VALUE)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_CRAFTING_VALUE + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::CRAFTING_VALUE))));
-    }
-
-    if (card.hasAttribute(AttributeType::TRADE_VALUE)) {
-        tooltipLines_.push_back(Constants::TOOLTIP_TRADE_VALUE + ": " + std::to_string(static_cast<int>(card.getAttribute(AttributeType::TRADE_VALUE))));
-    }
-
-    // Functional info
-    if (card.isEdible()) {
-        tooltipLines_.push_back(Constants::TOOLTIP_EDIBLE);
-    }
-
-    if (card.isBurnable()) {
-        tooltipLines_.push_back(Constants::TOOLTIP_BURNABLE);
+    
+    // Add tags
+    for (const auto& tag : data.tags) {
+        tooltipLines_.push_back(tag.tag);
     }
 }
 

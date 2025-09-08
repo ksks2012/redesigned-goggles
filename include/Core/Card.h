@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include "Interface/ui/TooltipData.h"
 
 // Card type enumeration
 enum class CardType {
@@ -28,7 +29,7 @@ enum class AttributeType {
     TRADE_VALUE
 };
 
-struct Card {
+struct Card : public ITooltipProvider {
     std::string name;
     int rarity; // 1=Common, 2=Rare, 3=Legendary
     int quantity;
@@ -111,4 +112,7 @@ struct Card {
     bool isBurnable() const {
         return hasAttribute(AttributeType::BURN_VALUE) && getAttribute(AttributeType::BURN_VALUE) > 0;
     }
+    
+    // Implement ITooltipProvider interface
+    TooltipData getTooltipData() const override;
 };
