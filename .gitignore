@@ -63,6 +63,8 @@ Makefile
 
 # Project Define
 **/lib/**
+**/extracted_libs/**
+*_lib/**
 **/var/**
 **/summary/**
 *.ttf
