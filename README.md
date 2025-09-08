@@ -8,6 +8,7 @@ A survival game developed in C++ with SDL2, featuring comprehensive inventory ma
 - **Survival Mechanics**: Complete survival game experience
 - **Inventory Management**: Dynamic inventory system supporting multiple item types
 - **Crafting System**: Complex item crafting and recipe management
+- **Base Building System**: Strategic base construction with grid-based placement
 - **Event System**: Reactive game event handling
 - **Save/Load**: JSON-based game state persistence
 
@@ -173,6 +174,41 @@ class Inventory {
     void addCard(const Card& card);
     bool removeCard(const std::string& cardName);
     std::vector<Card> getCards() const;
+};
+```
+
+**Base Building System**:
+```cpp
+class BaseManager {
+    // Grid-based base construction
+    bool canPlaceBuildingAt(int x, int y, const BuildingType& type);
+    bool placeBuilding(int x, int y, const Card& sourceCard);
+    void removeBuildingAt(int x, int y);
+    
+    // Building management
+    std::vector<Building> getBuildings() const;
+    Building* getBuildingAt(int x, int y);
+    int getTotalDefense() const;
+    int getTotalDurability() const;
+    
+    // Grid system (5x5 expandable)
+    bool isPositionValid(int x, int y) const;
+    bool isSlotUnlocked(int x, int y) const;
+};
+
+class Building {
+    // Building properties
+    std::string name;           // e.g., "Wall", "Farm"
+    int durability;            // Current durability (0-100)
+    int maxDurability;         // Maximum durability
+    int defenseValue;          // Defense contribution
+    int x, y;                  // Grid position
+    BuildingType type;         // Wall, Farm, Workshop, etc.
+    
+    // Building behavior
+    void takeDamage(int damage);
+    bool isDestroyed() const;
+    void repair(int amount);
 };
 ```
 
