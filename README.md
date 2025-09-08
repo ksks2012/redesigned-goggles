@@ -80,7 +80,7 @@ sudo apt-get install libsdl2-dev libsdl2-ttf-dev cmake build-essential
 # macOS
 brew install sdl2 sdl2_ttf cmake
 
-# Windows (使用vcpkg)
+# Windows
 vcpkg install sdl2 sdl2-ttf
 ```
 
