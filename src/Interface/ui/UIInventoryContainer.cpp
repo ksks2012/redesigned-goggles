@@ -18,6 +18,22 @@ void UIInventoryContainer::updateInventory(const Inventory& inventory) {
     inventoryCards_ = inventory.getCards();
     lastInventorySize_ = inventoryCards_.size();
     
+    // Check if selectedCard_ is still valid in the new inventory
+    if (selectedCard_) {
+        bool cardStillExists = false;
+        for (const auto& card : inventoryCards_) {
+            if (&card == selectedCard_) {
+                cardStillExists = true;
+                break;
+            }
+        }
+        
+        // If the selected card is no longer in the inventory, clear the selection
+        if (!cardStillExists) {
+            selectedCard_ = nullptr;
+        }
+    }
+    
     // Reset pool for reuse
     resetPool();
     
@@ -177,7 +193,21 @@ void UIInventoryContainer::setSelectedCard(const Card* card) {
     // Update visual state of active cards
     for (size_t i = 0; i < usedCards_; ++i) {
         if (cardPool_[i]) {
-            bool isSelected = selectedCard_ && cardPool_[i]->compareDisplayData(selectedCard_->getCardDisplayData());
+            bool isSelected = false;
+            if (selectedCard_) {
+                // Safely check if selectedCard_ is still valid by comparing with inventory cards
+                bool selectedCardValid = false;
+                for (const auto& invCard : inventoryCards_) {
+                    if (&invCard == selectedCard_) {
+                        selectedCardValid = true;
+                        break;
+                    }
+                }
+                
+                if (selectedCardValid) {
+                    isSelected = cardPool_[i]->compareDisplayData(selectedCard_->getCardDisplayData());
+                }
+            }
             cardPool_[i]->setSelected(isSelected);
         }
     }
@@ -214,10 +244,15 @@ std::string UIInventoryContainer::getCardKey(const Card& card) const {
 
 void UIInventoryContainer::saveSelectionState() {
     selectionState_.clear();
-    
-    // Since we track selection through selectedCard_ pointer,
-    // we don't need to iterate through cardPool_ to save state
-    // The selection state is maintained through selectedCard_
+    for (size_t i = 0; i < usedCards_; ++i) {
+        if (cardPool_[i]) {
+            const CardDisplayData& displayData = cardPool_[i]->getDisplayData();
+            // Assuming getCardKey can be overloaded or modified to accept CardDisplayData,
+            // or you need to extract the key info from displayData manually.
+            std::string key = displayData.name + "_" + std::to_string(displayData.rarity);
+            selectionState_[key] = cardPool_[i]->isSelected();
+        }
+    }
 }
 
 void UIInventoryContainer::restoreSelectionState(UICard* uiCard, const Card& card) {

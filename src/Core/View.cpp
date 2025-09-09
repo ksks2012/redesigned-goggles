@@ -54,12 +54,24 @@ void View::render(const Inventory& inventory, const Card* selectedCard, int mous
     // Render inventory (virtualized rendering happens inside the container)
     inventoryContainer_->render();
     
-    // Render dragged card if any
-    if (isDragging && draggedCard) {
+    // Helper function to check if card pointer is still valid in current inventory
+    auto isCardValid = [&inventory](const Card* card) -> bool {
+        if (!card) return false;
+        const auto& cards = inventory.getCards();
+        for (const auto& invCard : cards) {
+            if (&invCard == card) {
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    // Render dragged card if any (check validity first)
+    if (isDragging && draggedCard && isCardValid(draggedCard)) {
         // Create temporary UICard for drag rendering
         auto dragCard = std::make_unique<UICard>(*draggedCard, mouseX, mouseY, sdlManager_);
         dragCard->renderDragging(mouseX, mouseY);
-    } else if (selectedCard) {
+    } else if (selectedCard && isCardValid(selectedCard)) {
         // Render selected card highlight if not dragging
         auto dragCard = std::make_unique<UICard>(*selectedCard, mouseX, mouseY, sdlManager_);
         dragCard->renderDragging(mouseX, mouseY);
