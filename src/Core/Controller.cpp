@@ -112,14 +112,20 @@ void Controller::organizeInventory() {
             inventory_.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
         }
         
-        // Use shorter sleep intervals for faster shutdown response
+        // Use much shorter sleep intervals for faster shutdown response
+        // Split the total sleep time into smaller chunks for immediate response
         const auto totalSleepTime = Constants::ORGANIZE_INTERVAL;
-        const auto shortInterval = std::chrono::milliseconds(100); // Check every 100ms
+        const auto shortInterval = std::chrono::milliseconds(50); // Check every 50ms instead of 100ms
         auto elapsed = std::chrono::milliseconds(0);
         
         while (elapsed < totalSleepTime && isRunning() && organizeInventoryEnabled_) {
             std::this_thread::sleep_for(shortInterval);
             elapsed += shortInterval;
+            
+            // Early exit check every 200ms for even faster response
+            if (elapsed.count() % 200 == 0 && (!isRunning() || !organizeInventoryEnabled_)) {
+                break;
+            }
         }
     }
 }

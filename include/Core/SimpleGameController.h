@@ -19,6 +19,7 @@
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
+#include <future>
 
 // Forward declarations
 namespace DataManagement {
@@ -97,6 +98,12 @@ public:
         
         while (running_ && controller_->isRunning()) {
             processFrame();
+            
+            // Use shorter delay for better responsiveness during shutdown
+            if (shutdown_) {
+                break; // Immediately exit if shutdown has started
+            }
+            
             SDL_Delay(Constants::FRAME_DELAY_MS);
         }
         
@@ -112,6 +119,11 @@ public:
     }
     
     void processFrame() {
+        // Quick exit check for immediate responsiveness
+        if (!running_ || shutdown_) {
+            return;
+        }
+        
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             // Handle editor input first
@@ -121,6 +133,11 @@ public:
             
             // Handle game input
             controller_->handleEvent(event);
+            
+            // Check for shutdown after each event for immediate response
+            if (!running_ || shutdown_) {
+                return;
+            }
         }
         
         // Update editor
@@ -345,14 +362,27 @@ private:
         if (shutdown_) return; // Prevent multiple shutdowns
         shutdown_ = true;
         
-        // Stop background processes first
+        std::cout << "Starting graceful shutdown..." << std::endl;
+        
+        // Stop background processes first with immediate effect
         if (controller_) {
             controller_->stopOrganizeInventory();
         }
         
-        // Automatically save when the game ends
+        // Automatically save when the game ends (with timeout protection)
         std::cout << "Game ended, saving..." << std::endl;
-        saveGame();
+        try {
+            auto future = std::async(std::launch::async, [this]() {
+                return saveGame();
+            });
+            
+            // Wait for save with shorter timeout
+            if (future.wait_for(std::chrono::milliseconds(800)) == std::future_status::timeout) {
+                std::cout << "Save operation timed out, continuing shutdown..." << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cout << "Save error: " << e.what() << ", continuing shutdown..." << std::endl;
+        }
         
         // Cleanup background threads
         cleanup();
@@ -362,6 +392,8 @@ private:
             imguiManager_->shutdown();
         }
         // SDLManager cleanup is handled by destructor
+        
+        std::cout << "Shutdown complete." << std::endl;
     }
     
     /**
@@ -386,9 +418,9 @@ private:
                 }
             });
             
-            // Wait with timeout
+            // Wait with timeout - reduce to 300ms for much faster response
             std::unique_lock<std::mutex> lock(timeoutMutex);
-            if (timeoutCv.wait_for(lock, std::chrono::seconds(2), [&] { return threadFinished; })) {
+            if (timeoutCv.wait_for(lock, std::chrono::milliseconds(300), [&] { return threadFinished; })) {
                 std::cout << "Background thread finished normally." << std::endl;
             } else {
                 std::cout << "Background thread did not finish in time, detaching..." << std::endl;
