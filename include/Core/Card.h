@@ -122,4 +122,10 @@ struct Card : public ITooltipProvider, public ICardDisplayProvider, public ICard
     
     // Implement ICardComparable interface
     bool isEquivalentForDisplay(const ICardComparable& other) const override;
+
+    bool compare(const CardDisplayData& other) const {
+        return (name == other.name &&
+                rarity == other.rarity &&
+                quantity == other.quantity);
+    }
 };

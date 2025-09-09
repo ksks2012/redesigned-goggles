@@ -48,6 +48,19 @@ struct CardDisplayData {
     void clearCustomColors() {
         useCustomColors = false;
     }
+    
+    // Equality comparison for display data
+    bool operator==(const CardDisplayData& other) const {
+        return name == other.name && 
+               type == other.type &&
+               quantity == other.quantity &&
+               rarity == other.rarity;
+    }
+    
+    // Inequality comparison for display data
+    bool operator!=(const CardDisplayData& other) const {
+        return !(*this == other);
+    }
 };
 
 /**

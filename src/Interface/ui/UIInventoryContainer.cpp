@@ -38,7 +38,7 @@ void UIInventoryContainer::updateInventory(const Inventory& inventory) {
             UICard* uiCard = getCardFromPool();
             if (uiCard) {
                 int cardX = x_ + Constants::INVENTORY_MARGIN;
-                uiCard->setCard(card);
+                uiCard->setFromProvider(card);
                 uiCard->setPosition(cardX, cardY);
                 restoreSelectionState(uiCard, card);
             }
@@ -84,7 +84,7 @@ void UIInventoryContainer::updateScroll(int scrollOffset) {
         if (uiCard) {
             int cardX = x_ + Constants::INVENTORY_MARGIN;
             int cardY = getCardYPosition(i);
-            uiCard->setCard(card);
+            uiCard->setFromProvider(card);
             uiCard->setPosition(cardX, cardY);
             restoreSelectionState(uiCard, card);
         }
@@ -177,7 +177,7 @@ void UIInventoryContainer::setSelectedCard(const Card* card) {
     // Update visual state of active cards
     for (size_t i = 0; i < usedCards_; ++i) {
         if (cardPool_[i]) {
-            bool isSelected = selectedCard_ && cardPool_[i]->compareCard(*selectedCard_);
+            bool isSelected = selectedCard_ && cardPool_[i]->compareDisplayData(selectedCard_->getCardDisplayData());
             cardPool_[i]->setSelected(isSelected);
         }
     }
@@ -215,12 +215,9 @@ std::string UIInventoryContainer::getCardKey(const Card& card) const {
 void UIInventoryContainer::saveSelectionState() {
     selectionState_.clear();
     
-    for (size_t i = 0; i < usedCards_; ++i) {
-        if (cardPool_[i] && cardPool_[i]->getCard()) {
-            const Card& card = cardPool_[i]->getCardRef();
-            selectionState_[getCardKey(card)] = cardPool_[i]->isSelected();
-        }
-    }
+    // Since we track selection through selectedCard_ pointer,
+    // we don't need to iterate through cardPool_ to save state
+    // The selection state is maintained through selectedCard_
 }
 
 void UIInventoryContainer::restoreSelectionState(UICard* uiCard, const Card& card) {
