@@ -24,7 +24,7 @@ namespace DataManagement {
  */
 class Game {
 private:
-    std::unique_ptr<GameSystem::SimpleGameController> gameController_;
+    std::shared_ptr<GameSystem::SimpleGameController> gameController_;
     
 public:
     /**

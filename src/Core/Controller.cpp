@@ -89,7 +89,7 @@ void Controller::organizeInventory() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
 
-    while (isRunning()) {
+    while (isRunning() && organizeInventoryEnabled_) {
         // Check if organizeInventory is enabled before processing
         if (organizeInventoryEnabled_) {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -111,7 +111,16 @@ void Controller::organizeInventory() {
             std::uniform_int_distribution<> rarityDist(Constants::RARITY_MIN, Constants::RARITY_MAX);
             inventory_.addCard(Constants::RandomCardGenerator::generateRandomCardByRarity(rarityDist(gen)));
         }
-        std::this_thread::sleep_for(Constants::ORGANIZE_INTERVAL);
+        
+        // Use shorter sleep intervals for faster shutdown response
+        const auto totalSleepTime = Constants::ORGANIZE_INTERVAL;
+        const auto shortInterval = std::chrono::milliseconds(100); // Check every 100ms
+        auto elapsed = std::chrono::milliseconds(0);
+        
+        while (elapsed < totalSleepTime && isRunning() && organizeInventoryEnabled_) {
+            std::this_thread::sleep_for(shortInterval);
+            elapsed += shortInterval;
+        }
     }
 }
 
@@ -157,6 +166,12 @@ void Controller::resumeOrganizeInventory() {
     std::lock_guard<std::mutex> lock(mutex_);
     organizeInventoryEnabled_ = true;
     std::cout << "Inventory organization resumed" << std::endl;
+}
+
+void Controller::stopOrganizeInventory() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    organizeInventoryEnabled_ = false;
+    std::cout << "Inventory organization stopped permanently" << std::endl;
 }
 
 void Controller::safeRemoveCard(const std::string& name, int rarity) {

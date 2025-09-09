@@ -32,6 +32,7 @@ set(SOURCES
     src/Core/Game.cpp
     src/Core/Event.cpp
     src/Core/Controller.cpp
+    src/Core/SignalHandler.cpp
     src/Core/Inventory.cpp
     src/Core/Building.cpp
     src/Core/BaseManager.cpp
@@ -70,6 +71,7 @@ set(LIB_SOURCES
     src/Core/Game.cpp
     src/Core/Event.cpp
     src/Core/Controller.cpp
+    src/Core/SignalHandler.cpp
     src/Core/Inventory.cpp
     src/Core/Building.cpp
     src/Core/BaseManager.cpp

@@ -1,5 +1,6 @@
 #include "Core/Game.h"
 #include "Core/SimpleGameController.h"
+#include "Core/SignalHandler.h"
 
 /**
  * Refactored Game implementation
@@ -10,6 +11,9 @@
 Game::Game() {
     // Create the game controller with dependency injection
     gameController_ = GameSystem::SimpleGameFactory::createGame();
+    
+    // Setup signal handlers for graceful shutdown
+    GameSystem::SignalHandler::setup(gameController_);
 }
 
 // IGameLoop interface implementation

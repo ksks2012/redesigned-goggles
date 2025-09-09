@@ -71,6 +71,14 @@ void ImGuiManager::shutdown() {
     if (!initialized_) return;
     
     std::cout << "ImGuiManager: Shutdown" << std::endl;
+    
+    // Stop console editor if it's running
+    if (consoleEditorActive_ && consoleEditor_) {
+        std::cout << "Stopping console editor..." << std::endl;
+        consoleEditor_->stop();
+        consoleEditorActive_ = false;
+    }
+    
     initialized_ = false;
 }
 

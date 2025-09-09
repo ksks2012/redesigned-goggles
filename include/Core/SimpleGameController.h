@@ -16,6 +16,9 @@
 #include <memory>
 #include <thread>
 #include <iostream>
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
 
 // Forward declarations
 namespace DataManagement {
@@ -50,6 +53,7 @@ private:
     
     // Game state
     bool running_;
+    bool shutdown_;
     std::unique_ptr<std::thread> organizerThread_;
     
 public:
@@ -69,7 +73,7 @@ public:
           gameEditor_(nullptr),
           dataManager_(nullptr),
           globalDataManager_(nullptr),
-          running_(true) {
+          running_(true), shutdown_(false) {
         
         initialize();
     }
@@ -78,8 +82,11 @@ public:
      * Destructor - cleanup resources
      */
     ~SimpleGameController() {
-        stop();
-        cleanup();
+        // Ensure proper shutdown order
+        if (running_ && !shutdown_) {
+            stop();
+            shutdown();
+        }
     }
     
     // Game loop interface
@@ -335,6 +342,14 @@ private:
      * Follows Single Responsibility Principle (SRP)
      */
     void shutdown() {
+        if (shutdown_) return; // Prevent multiple shutdowns
+        shutdown_ = true;
+        
+        // Stop background processes first
+        if (controller_) {
+            controller_->stopOrganizeInventory();
+        }
+        
         // Automatically save when the game ends
         std::cout << "Game ended, saving..." << std::endl;
         saveGame();
@@ -355,7 +370,38 @@ private:
      */
     void cleanup() {
         if (organizerThread_ && organizerThread_->joinable()) {
-            organizerThread_->join();
+            std::cout << "Waiting for background thread to finish..." << std::endl;
+            
+            // Simple approach: wait for a reasonable time then detach if needed
+            bool threadFinished = false;
+            std::mutex timeoutMutex;
+            std::condition_variable timeoutCv;
+            
+            std::thread timeoutChecker([&]() {
+                if (organizerThread_->joinable()) {
+                    organizerThread_->join();
+                    std::lock_guard<std::mutex> lock(timeoutMutex);
+                    threadFinished = true;
+                    timeoutCv.notify_one();
+                }
+            });
+            
+            // Wait with timeout
+            std::unique_lock<std::mutex> lock(timeoutMutex);
+            if (timeoutCv.wait_for(lock, std::chrono::seconds(2), [&] { return threadFinished; })) {
+                std::cout << "Background thread finished normally." << std::endl;
+            } else {
+                std::cout << "Background thread did not finish in time, detaching..." << std::endl;
+                if (organizerThread_->joinable()) {
+                    organizerThread_->detach();
+                }
+            }
+            
+            if (timeoutChecker.joinable()) {
+                timeoutChecker.detach();
+            }
+            
+            organizerThread_.reset();
         }
     }
 };
@@ -370,8 +416,8 @@ public:
      * Create a game with proper dependency injection
      * Follows Factory Pattern
      */
-    static std::unique_ptr<SimpleGameController> createGame() {
-        return std::make_unique<SimpleGameController>();
+    static std::shared_ptr<SimpleGameController> createGame() {
+        return std::make_shared<SimpleGameController>();
     }
 };
 
