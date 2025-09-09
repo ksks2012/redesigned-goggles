@@ -128,4 +128,10 @@ struct Card : public ITooltipProvider, public ICardDisplayProvider, public ICard
                 rarity == other.rarity &&
                 quantity == other.quantity);
     }
+
+    bool compare(const Card& other) const {
+        return (name == other.name &&
+                rarity == other.rarity &&
+                quantity == other.quantity);
+    }
 };

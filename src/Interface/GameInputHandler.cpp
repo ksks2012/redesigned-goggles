@@ -241,7 +241,27 @@ void GameInputHandler::addRandomCard() {
 void GameInputHandler::removeFirstCard() {
     auto& cards = inventory_.getCards();
     if (!cards.empty()) {
-        inventory_.removeCard(cards[0].name, cards[0].rarity);
+        const Card& cardToRemove = cards[0];
+
+        if (cardToRemove.quantity == 1) {
+            // Check if the card being removed is currently selected
+            if (selectedCard_ && selectedCard_->compare(cardToRemove)) {
+                selectedCard_ = nullptr;  // Clear selection
+            }
+            
+            // Check if the card being removed is currently being dragged
+            if (draggedCard_ && draggedCard_->compare(cardToRemove)) {
+                draggedCard_ = nullptr;
+                isDragging_ = false;  // Stop dragging
+            }
+            
+            // Check if the card being removed is the previously selected card
+            if (previousSelectedCard_ && previousSelectedCard_ == &cardToRemove) {
+                previousSelectedCard_ = nullptr;
+            }
+        }
+
+        inventory_.removeCard(cardToRemove.name, cardToRemove.rarity);
     }
 }
 
@@ -401,4 +421,34 @@ bool GameInputHandler::shouldStartDrag(int currentX, int currentY) const {
     int distance = deltaX * deltaX + deltaY * deltaY;
     
     return distance >= (DRAG_THRESHOLD * DRAG_THRESHOLD);
+}
+
+void GameInputHandler::validateCardPointers() {
+    // Helper function to check if a card pointer is valid
+    auto isCardValid = [this](const Card* card) -> bool {
+        if (!card) return false;
+        const auto& cards = inventory_.getCards();
+        for (const auto& invCard : cards) {
+            if (&invCard == card) {
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    // Clear selectedCard_ if it's no longer valid
+    if (selectedCard_ && !isCardValid(selectedCard_)) {
+        selectedCard_ = nullptr;
+    }
+    
+    // Clear previousSelectedCard_ if it's no longer valid
+    if (previousSelectedCard_ && !isCardValid(previousSelectedCard_)) {
+        previousSelectedCard_ = nullptr;
+    }
+    
+    // Clear draggedCard_ and stop dragging if it's no longer valid
+    if (draggedCard_ && !isCardValid(draggedCard_)) {
+        draggedCard_ = nullptr;
+        isDragging_ = false;
+    }
 }

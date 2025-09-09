@@ -35,6 +35,9 @@ public:
     // Editor mode control for organizeInventory
     void pauseOrganizeInventory();
     void resumeOrganizeInventory();
+    
+    // Safe card removal that clears selection state
+    void safeRemoveCard(const std::string& name, int rarity);
 
 private:
     Inventory& inventory_;

@@ -73,6 +73,10 @@ bool Controller::isRunning() const {
 }
 
 void Controller::updateView() {
+    // Validate card pointers before rendering to prevent dangling pointer errors
+    // FIXME:
+    // inputHandler_->validateCardPointers();
+    
     view_.render(inventory_, inputHandler_->getSelectedCard(), 
                 inputHandler_->getMouseX(), inputHandler_->getMouseY(), 
                 inputHandler_->isShowingCraftingPanel(), craftingSystem_,
@@ -135,7 +139,7 @@ void Controller::handleExplore() {
                 std::cout << "Event: " << event.description << " - Gained " << card.name << " x" << card.quantity << std::endl;
             }
             for (const auto& card : event.penalties) {
-                inventory_.removeCard(card.name, card.rarity);
+                safeRemoveCard(card.name, card.rarity);
                 std::cout << "Event: " << event.description << " - Lost " << card.name << " x" << card.quantity << std::endl;
             }
             break;
@@ -153,4 +157,28 @@ void Controller::resumeOrganizeInventory() {
     std::lock_guard<std::mutex> lock(mutex_);
     organizeInventoryEnabled_ = true;
     std::cout << "Inventory organization resumed" << std::endl;
+}
+
+void Controller::safeRemoveCard(const std::string& name, int rarity) {
+    // Find the card that will be removed to check if it's selected
+    const auto& cards = inventory_.getCards();
+    const Card* cardToRemove = nullptr;
+    
+    for (const auto& card : cards) {
+        if (card.name == name && card.rarity == rarity) {
+            cardToRemove = &card;
+            break;
+        }
+    }
+    
+    // Clear selection state if the card being removed is selected
+    if (cardToRemove) {
+        inputHandler_->validateCardPointers();  // This will clean up any invalid pointers
+    }
+    
+    // Remove the card from inventory
+    inventory_.removeCard(name, rarity);
+    
+    // Validate pointers again after removal to ensure consistency
+    inputHandler_->validateCardPointers();
 }

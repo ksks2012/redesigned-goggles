@@ -75,6 +75,9 @@ public:
     void setFocusNextCallback(std::function<void()> callback) { focusNextCallback_ = callback; }
     void setFocusPreviousCallback(std::function<void()> callback) { focusPreviousCallback_ = callback; }
     void setClearFocusCallback(std::function<void()> callback) { clearFocusCallback_ = callback; }
+    
+    // Pointer validation - clear invalid card pointers
+    void validateCardPointers();
 
 private:
     IGameView& view_;
