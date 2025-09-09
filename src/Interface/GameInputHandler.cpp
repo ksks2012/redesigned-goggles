@@ -3,6 +3,9 @@
 #include "Core/BaseManager.h"
 #include <iostream>
 #include <random>
+#include <thread>
+#include <chrono>
+#include <cstdlib>
 
 GameInputHandler::GameInputHandler(IGameView& view, 
                                   Inventory& inventory, 
@@ -174,7 +177,10 @@ void GameInputHandler::handleKeyDown(int keyCode) {
                 showCraftingPanel_ = false;
                 std::cout << "Crafting panel closed (ESC)" << std::endl;
             } else {
+                std::cout << "ESC pressed, shutting down gracefully..." << std::endl;
                 running_ = false;
+                // Add forced exit protection similar to signal handler
+                forceExitIfNeeded("ESC key");
             }
             break;
 
@@ -184,7 +190,10 @@ void GameInputHandler::handleKeyDown(int keyCode) {
 }
 
 void GameInputHandler::handleQuit() {
+    std::cout << "Window close button clicked, shutting down gracefully..." << std::endl;
     running_ = false;
+    // Add forced exit protection similar to signal handler
+    forceExitIfNeeded("window close");
 }
 
 void GameInputHandler::handleButtonClick(const std::string& buttonName) {
@@ -451,4 +460,14 @@ void GameInputHandler::validateCardPointers() {
         draggedCard_ = nullptr;
         isDragging_ = false;
     }
+}
+
+void GameInputHandler::forceExitIfNeeded(const std::string& source) {
+    // Implement forced exit protection similar to SignalHandler
+    // This ensures consistent shutdown behavior across all exit methods
+    std::thread([source]() {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << "Force exit due to " << source << std::endl;
+        std::_Exit(0); // Use _Exit for immediate termination
+    }).detach();
 }

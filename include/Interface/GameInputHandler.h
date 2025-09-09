@@ -127,4 +127,7 @@ private:
     void updateDrag(int currentX, int currentY);
     void endDrag(int endX, int endY);
     bool shouldStartDrag(int currentX, int currentY) const;
+    
+    // Force exit protection for consistent shutdown behavior
+    void forceExitIfNeeded(const std::string& source);
 };
