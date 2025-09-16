@@ -1,0 +1,3 @@
+[submodule "extracted_libs/ui_framework"]
+	path = extracted_libs/ui_framework
+	url = git@github.com:ksks2012/shiny-palm-tree.git

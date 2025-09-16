@@ -27,6 +27,10 @@ include_directories(${CMAKE_SOURCE_DIR}/include/Interface)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 include_directories(${CMAKE_SOURCE_DIR}/lib/nlohmann)
 
+# Add UI Framework submodule
+add_subdirectory(extracted_libs/ui_framework)
+include_directories(${CMAKE_SOURCE_DIR}/extracted_libs/ui_framework/include)
+
 # Source files
 set(SOURCES
     src/Core/Game.cpp
@@ -45,15 +49,9 @@ set(SOURCES
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
     src/Interface/GameInputHandler.cpp
-    src/Interface/ui/UIComponent.cpp
-    src/Interface/ui/UIButton.cpp
-    src/Interface/ui/UICard.cpp
-    src/Interface/ui/UIManager.cpp
-    src/Interface/ui/UIContainer.cpp
+    # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
-    src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
-    src/Interface/ui/FocusableButton.cpp
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -64,7 +62,7 @@ set(SOURCES
 add_executable(Survive ${SOURCES})
 
 # Link libraries
-target_link_libraries(Survive SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+target_link_libraries(Survive UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 
 # Create library for testing (excludes main.cpp)
 set(LIB_SOURCES
@@ -79,31 +77,21 @@ set(LIB_SOURCES
     src/Core/Card.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
-    src/Systems/SDLManager.cpp
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
     src/Interface/GameInputHandler.cpp
-    src/Interface/ui/UIComponent.cpp
-    src/Interface/ui/UIButton.cpp
-    src/Interface/ui/UICard.cpp
-    src/Interface/ui/UIManager.cpp
-    src/Interface/ui/UIContainer.cpp
+    # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
-    src/Interface/ui/UITooltip.cpp
     src/Interface/ui/UICraftingPanel.cpp
-    src/Interface/ui/FocusableButton.cpp
-    src/Interface/ui/FocusableButtonTestWindow.cpp
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
 )
 
 add_library(SurviveLib STATIC ${LIB_SOURCES})
-target_link_libraries(SurviveLib SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+target_link_libraries(SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 
-# Create FocusableButton test executable
-add_executable(FocusableButtonTest testing/testing_focusable_button.cpp)
-target_link_libraries(FocusableButtonTest SurviveLib SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+# FocusableButtonTest is now provided by ui_framework submodule
 
 # Add tests if Catch2 is available
 if(CATCH2_AVAILABLE)
@@ -117,31 +105,28 @@ if(CATCH2_AVAILABLE)
         tests/test_crafting_system.cpp
         tests/test_data_manager.cpp
         tests/test_base_building.cpp
-        tests/test_ui_manager.cpp
         tests/test_ui_container.cpp
         tests/test_ui_virtualization.cpp
         tests/test_ui_integration.cpp
-        tests/test_ui_layout.cpp
-        tests/test_ui_focus.cpp
     )
     
     # Create test executable
     add_executable(SurviveTests ${TEST_SOURCES})
-    target_link_libraries(SurviveTests SurviveLib SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+    target_link_libraries(SurviveTests SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
     
     # Add compile flags for threading support (required for threading tests)
     target_compile_options(SurviveTests PRIVATE -pthread)
     target_link_options(SurviveTests PRIVATE -pthread)
     
     # Create custom test target
-    add_custom_target(test_run
+    add_custom_target(survive_tests
         COMMAND SurviveTests
         DEPENDS SurviveTests
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMENT "Running Catch2 tests"
+        COMMENT "Running Survive Catch2 tests"
     )
     
-    message(STATUS "Catch2 tests enabled - use 'make test_run' to run tests")
+    message(STATUS "Catch2 tests enabled - use 'make survive_tests' to run tests")
 else()
     message(STATUS "Catch2 not available - tests disabled")
     message(STATUS "To enable tests, ensure ${CMAKE_SOURCE_DIR}/lib/catch2/catch.hpp exists")
