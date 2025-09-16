@@ -58,6 +58,7 @@ Makefile
 *.bak
 *.backup
 *.tar.gz
+**/backup_ui_files/**
 
 # Logs
 *.log
