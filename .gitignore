@@ -57,6 +57,7 @@ Makefile
 *~
 *.bak
 *.backup
+*.tar.gz
 
 # Logs
 *.log
@@ -64,6 +65,7 @@ Makefile
 # Project Define
 **/lib/**
 **/extracted_libs/**
+!extracted_libs/ui_framework
 *_lib/**
 **/var/**
 **/summary/**
