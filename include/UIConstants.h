@@ -45,6 +45,12 @@ constexpr SDL_Color FOCUSED_COLOR = {80, 120, 180, 255};
 constexpr SDL_Color PRESSED_COLOR = {60, 60, 60, 255};
 constexpr SDL_Color FOCUS_BORDER_COLOR = {255, 255, 0, 255};
 
+// Progress Bar Colors
+constexpr SDL_Color PROGRESS_BAR_BACKGROUND = {40, 40, 40, 255};     // Dark gray background
+constexpr SDL_Color PROGRESS_BAR_FILL = {60, 150, 60, 255};          // Green fill
+constexpr SDL_Color PROGRESS_BAR_BORDER = {100, 100, 100, 255};      // Gray border
+constexpr SDL_Color PROGRESS_BAR_TEXT = {255, 255, 255, 255};        // White text
+
 // Card Rendering Layout
 constexpr int CARD_X = 50;
 constexpr int CARD_WIDTH = 200;
