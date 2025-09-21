@@ -71,7 +71,6 @@ Makefile
 *_lib/**
 **/var/**
 **/summary/**
-**/examples/**
 *.ttf
 *.json
 
