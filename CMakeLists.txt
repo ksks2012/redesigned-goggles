@@ -5,7 +5,7 @@ project(Survive)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find required packages
+# Required packages
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 
@@ -48,10 +48,12 @@ set(SOURCES
     src/Systems/SDLManager.cpp
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
+    src/Systems/TechTreeSystem.cpp
     src/Interface/GameInputHandler.cpp
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UICraftingPanel.cpp
+    # Tech tree components moved to ui_framework
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -79,10 +81,12 @@ set(LIB_SOURCES
     src/Systems/SaveManager.cpp
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
+    src/Systems/TechTreeSystem.cpp
     src/Interface/GameInputHandler.cpp
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UICraftingPanel.cpp
+    # Tech tree components moved to ui_framework
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -108,6 +112,7 @@ if(CATCH2_AVAILABLE)
         tests/test_ui_container.cpp
         tests/test_ui_virtualization.cpp
         tests/test_ui_integration.cpp
+        tests/test_tech_tree.cpp
     )
     
     # Create test executable
@@ -131,3 +136,19 @@ else()
     message(STATUS "Catch2 not available - tests disabled")
     message(STATUS "To enable tests, ensure ${CMAKE_SOURCE_DIR}/lib/catch2/catch.hpp exists")
 endif()
+
+# Add examples
+add_executable(TechTreeExample examples/tech_tree_example.cpp)
+target_link_libraries(TechTreeExample SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add UILabel tech tree test
+add_executable(TechTreeUITest examples/tech_tree_ui_test.cpp)
+target_link_libraries(TechTreeUITest SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add layout demo
+add_executable(TechTreeLayoutDemo examples/tech_tree_layout_demo.cpp)
+target_link_libraries(TechTreeLayoutDemo SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add console demo
+add_executable(TechTreeConsoleDemo examples/tech_tree_console_demo.cpp)
+target_link_libraries(TechTreeConsoleDemo SurviveLib)
