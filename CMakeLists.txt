@@ -53,9 +53,7 @@ set(SOURCES
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UICraftingPanel.cpp
-    src/Interface/ui/TechNode.cpp
-    src/Interface/ui/TechTree.cpp
-    src/Interface/ui/TechTreeUI.cpp
+    # Tech tree components moved to ui_framework
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -88,9 +86,7 @@ set(LIB_SOURCES
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
     src/Interface/ui/UICraftingPanel.cpp
-    src/Interface/ui/TechNode.cpp
-    src/Interface/ui/TechTree.cpp
-    src/Interface/ui/TechTreeUI.cpp
+    # Tech tree components moved to ui_framework
     src/Interface/editor/GameData.cpp
     src/Interface/editor/GameEditor.cpp
     src/Interface/editor/ConsoleEditor.cpp
@@ -144,6 +140,14 @@ endif()
 # Add examples
 add_executable(TechTreeExample examples/tech_tree_example.cpp)
 target_link_libraries(TechTreeExample SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add UILabel tech tree test
+add_executable(TechTreeUITest examples/tech_tree_ui_test.cpp)
+target_link_libraries(TechTreeUITest SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add layout demo
+add_executable(TechTreeLayoutDemo examples/tech_tree_layout_demo.cpp)
+target_link_libraries(TechTreeLayoutDemo SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 
 # Add console demo
 add_executable(TechTreeConsoleDemo examples/tech_tree_console_demo.cpp)
