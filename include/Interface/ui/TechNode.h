@@ -1,6 +1,4 @@
-#ifndef TECHNODE_H
-#define TECHNODE_H
-
+#pragma once
 #include <string>
 #include <vector>
 #include <memory>
@@ -153,5 +151,3 @@ public:
      */
     std::string getStatusText() const;
 };
-
-#endif // TECHNODE_H
