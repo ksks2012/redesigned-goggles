@@ -4,6 +4,7 @@
 #include "Systems/SDLManager.h"
 #include "Core/Inventory.h"
 #include "Systems/CraftingSystem.h"
+#include "Systems/TechTreeSystem.h"
 #include "Core/Controller.h"
 #include "Core/View.h"
 #include "Core/BaseManager.h"
@@ -39,6 +40,7 @@ private:
     std::unique_ptr<SDLManager> sdlManager_;
     std::unique_ptr<Inventory> inventory_;
     std::unique_ptr<CraftingSystem> craftingSystem_;
+    std::unique_ptr<TechTreeSystem> techTreeSystem_;
     std::unique_ptr<BaseManager> baseManager_;
     std::unique_ptr<View> view_;
     std::unique_ptr<Controller> controller_;
@@ -171,6 +173,14 @@ public:
         return *craftingSystem_;
     }
     
+    TechTreeSystem& getTechTreeSystem() {
+        return *techTreeSystem_;
+    }
+    
+    const TechTreeSystem& getTechTreeSystem() const {
+        return *techTreeSystem_;
+    }
+    
     Controller& getController() {
         return *controller_;
     }
@@ -299,6 +309,13 @@ private:
     bool initializeDataSystem() {
         globalDataManager_ = std::make_unique<DataManagement::GameDataManager>();
         std::cout << "Data management system initialized" << std::endl;
+        
+        // Initialize TechTreeSystem after DataManager is created
+        techTreeSystem_ = std::make_unique<TechTreeSystem>(*sdlManager_, 
+                                                           globalDataManager_.get(), 
+                                                           craftingSystem_.get());
+        std::cout << "Tech tree system initialized" << std::endl;
+        
         return true;
     }
     

@@ -1,9 +1,11 @@
 #include "Systems/TechTreeSystem.h"
+#include "Systems/CraftingSystem.h"
 #include <iostream>
 #include <fstream>
 
-TechTreeSystem::TechTreeSystem(SDLManager& sdlManager, DataManagement::GameDataManager* dataMgr)
-    : sdlManager(sdlManager), dataManager(dataMgr) {
+TechTreeSystem::TechTreeSystem(SDLManager& sdlManager, DataManagement::GameDataManager* dataMgr, 
+                               CraftingSystem* craftingSys)
+    : sdlManager(sdlManager), dataManager(dataMgr), craftingSystem(craftingSys) {
     techTree = std::make_unique<TechTree>();
 }
 
@@ -155,8 +157,7 @@ void TechTreeSystem::initializeBasicTechs() {
         "Learn basic survival skills, including gathering and simple tool crafting.",
         TechType::SURVIVAL, 50, 100, 100
     );
-    basicSurvival->addReward("recipe", "stone_axe");
-    basicSurvival->addReward("recipe", "wooden_spear");
+    basicSurvival->addReward("recipe", "medkit");
     basicSurvival->status = TechStatus::AVAILABLE; // Starting technology
     techTree->addTech(basicSurvival);
     
@@ -166,8 +167,7 @@ void TechTreeSystem::initializeBasicTechs() {
         "Master basic crafting techniques, able to create more complex tools.",
         TechType::CRAFTING, 100, 300, 100
     );
-    basicCrafting->addReward("recipe", "metal_knife");
-    basicCrafting->addReward("recipe", "rope");
+    basicCrafting->addReward("recipe", "fuel");
     techTree->addTech(basicCrafting);
     techTree->setPrerequisite("basic_crafting", "basic_survival");
     
@@ -177,7 +177,7 @@ void TechTreeSystem::initializeBasicTechs() {
         "Learn to grow crops, providing a stable food source.",
         TechType::AGRICULTURE, 150, 100, 250
     );
-    basicFarming->addReward("recipe", "wooden_hoe");
+    basicFarming->addReward("recipe", "nutrition_meal");
     basicFarming->addReward("building", "farm_plot");
     techTree->addTech(basicFarming);
     techTree->setPrerequisite("basic_farming", "basic_survival");
@@ -199,8 +199,8 @@ void TechTreeSystem::initializeBasicTechs() {
         "Master metalworking and advanced tool crafting techniques.",
         TechType::CRAFTING, 300, 500, 100
     );
-    advancedCrafting->addReward("recipe", "iron_sword");
-    advancedCrafting->addReward("recipe", "iron_pickaxe");
+    advancedCrafting->addReward("recipe", "enhanced_weapon");
+    advancedCrafting->addReward("recipe", "toolbox");
     techTree->addTech(advancedCrafting);
     techTree->setPrerequisite("advanced_crafting", "basic_crafting");
     
@@ -210,7 +210,7 @@ void TechTreeSystem::initializeBasicTechs() {
         "Develop weapons and defense technology to protect yourself.",
         TechType::MILITARY, 250, 500, 250
     );
-    militaryTech->addReward("recipe", "crossbow");
+    militaryTech->addReward("recipe", "wall");
     militaryTech->addReward("building", "watchtower");
     techTree->addTech(militaryTech);
     techTree->setPrerequisite("military_tech", "advanced_crafting");
@@ -223,7 +223,6 @@ void TechTreeSystem::initializeBasicTechs() {
         TechType::AGRICULTURE, 350, 100, 400
     );
     advancedFarming->addReward("building", "irrigation_system");
-    advancedFarming->addReward("recipe", "fertilizer");
     techTree->addTech(advancedFarming);
     techTree->setPrerequisite("advanced_farming", "basic_farming");
     
@@ -248,8 +247,11 @@ void TechTreeSystem::handleTechCompletion(const std::string& techId) {
     
     std::cout << "Tech completed: " << tech->name << std::endl;
     
-    // Apply rewards
+    // Apply rewards (including recipe unlocks)
     applyTechRewards(tech->rewards);
+    
+    // Unlock related recipes based on tech ID
+    unlockTechRelatedRecipes(techId);
     
     // Trigger system callback
     if (onTechCompleted) {
@@ -270,11 +272,12 @@ void TechTreeSystem::applyTechRewards(const std::vector<TechReward>& rewards) {
         }
         std::cout << std::endl;
         
-        // Here you can actually apply rewards based on reward type
-        // For example: unlock new recipes, buildings, etc.
+        // Apply rewards based on reward type
         if (reward.type == "recipe") {
-            // Unlock new recipe
-            // dataManager->unlockRecipe(reward.identifier);
+            // Unlock new recipe through crafting system
+            if (craftingSystem) {
+                craftingSystem->unlockRecipe(reward.identifier);
+            }
         } else if (reward.type == "building") {
             // Unlock new building
             // dataManager->unlockBuilding(reward.identifier);
@@ -362,5 +365,58 @@ void TechTreeSystem::resetTechTree() {
         }
         
         std::cout << "Tech tree reset to initial state" << std::endl;
+    }
+}
+
+void TechTreeSystem::testTriggerTechCompletion(const std::string& techId) {
+    handleTechCompletion(techId);
+}
+
+void TechTreeSystem::unlockTechRelatedRecipes(const std::string& techId) {
+    if (!craftingSystem) {
+        return;
+    }
+    
+    // Define tech-to-recipe mappings
+    // This maps completed technologies to recipes that should be unlocked
+    if (techId == "basic_survival") {
+        craftingSystem->unlockRecipe("basic_tools");
+        craftingSystem->unlockRecipe("simple_shelter");
+        std::cout << "Unlocked basic survival recipes" << std::endl;
+        
+    } else if (techId == "basic_crafting") {
+        craftingSystem->unlockRecipe("advanced_tools");
+        craftingSystem->unlockRecipe("wooden_weapons");
+        std::cout << "Unlocked basic crafting recipes" << std::endl;
+        
+    } else if (techId == "basic_farming") {
+        craftingSystem->unlockRecipe("farming_tools");
+        craftingSystem->unlockRecipe("food_processing");
+        std::cout << "Unlocked farming recipes" << std::endl;
+        
+    } else if (techId == "basic_building") {
+        craftingSystem->unlockRecipe("building_materials");
+        craftingSystem->unlockRecipe("construction_tools");
+        std::cout << "Unlocked construction recipes" << std::endl;
+        
+    } else if (techId == "advanced_crafting") {
+        craftingSystem->unlockRecipe("metal_tools");
+        craftingSystem->unlockRecipe("advanced_weapons");
+        std::cout << "Unlocked advanced crafting recipes" << std::endl;
+        
+    } else if (techId == "advanced_farming") {
+        craftingSystem->unlockRecipe("irrigation_systems");
+        craftingSystem->unlockRecipe("crop_enhancement");
+        std::cout << "Unlocked advanced farming recipes" << std::endl;
+        
+    } else if (techId == "military_tech") {
+        craftingSystem->unlockRecipe("combat_gear");
+        craftingSystem->unlockRecipe("defensive_structures");
+        std::cout << "Unlocked military technology recipes" << std::endl;
+        
+    } else if (techId == "tech_research") {
+        craftingSystem->unlockRecipe("research_equipment");
+        craftingSystem->unlockRecipe("knowledge_preservation");
+        std::cout << "Unlocked research technology recipes" << std::endl;
     }
 }

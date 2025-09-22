@@ -114,7 +114,7 @@ void CraftingSystem::initializeDefaultRecipes() {
         }(),
         0.9f);
     
-    // 2. Enhanced Weapon = Weapon x1 + Metal x1
+    // 2. Enhanced Weapon = Weapon x1 + Metal x1 (locked by default)
     Recipe enhancedWeaponRecipe("enhanced_weapon", "Enhanced Weapon", "A weapon reinforced with metal, higher attack power",
         {
             {Constants::CardFactory::createWeapon(), 1},
@@ -128,7 +128,7 @@ void CraftingSystem::initializeDefaultRecipes() {
             enhancedWeapon.setAttribute(AttributeType::TRADE_VALUE, 80.0f);
             return enhancedWeapon;
         }(),
-        0.8f);
+        0.8f, 0, false); // Locked by default
     
     // 3. Wall = Wood x2 + Metal x1
     Recipe wallRecipe("wall", "Wall", "Basic defensive structure",
@@ -161,7 +161,7 @@ void CraftingSystem::initializeDefaultRecipes() {
         }(),
         0.9f);
     
-    // 5. Toolbox = Metal x2 + Weapon x1 (disassembly tool)
+    // 5. Toolbox = Metal x2 + Weapon x1 (disassembly tool, locked by default)
     Recipe toolboxRecipe("toolbox", "Toolbox", "Multi-functional tool set",
         {
             {Constants::CardFactory::createMetal(), 2},
@@ -175,7 +175,7 @@ void CraftingSystem::initializeDefaultRecipes() {
             toolbox.setAttribute(AttributeType::TRADE_VALUE, 70.0f);
             return toolbox;
         }(),
-        0.75f);
+        0.75f, 0, false); // Locked by default
     
     // 6. Nutrition Meal = Food x2 + Water x1
     Recipe nutritionMealRecipe("nutrition_meal", "Nutrition Meal", "Nutritious food combination",

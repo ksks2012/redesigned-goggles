@@ -5,15 +5,20 @@
 #include <memory>
 #include <functional>
 
+// Forward declarations
+class CraftingSystem;
+
 /**
  * @brief Tech tree system
  * High-level manager integrating tech tree logic, UI and game systems
+ * Now integrates with crafting system to unlock recipes based on tech progress
  */
 class TechTreeSystem {
 private:
     std::unique_ptr<TechTree> techTree;                                 ///< Tech tree logic
     std::unique_ptr<TechTreeUI> techTreeUI;                             ///< Tech tree UI
     DataManagement::GameDataManager* dataManager;                     ///< Data manager
+    CraftingSystem* craftingSystem;                                     ///< Crafting system reference
     
     // Research related
     std::string currentResearchTech;                                    ///< Currently researched technology
@@ -32,8 +37,10 @@ public:
      * @brief Constructor
      * @param sdlManager SDL manager
      * @param dataManager Data manager
+     * @param craftingSystem Crafting system (optional)
      */
-    TechTreeSystem(SDLManager& sdlManager, DataManagement::GameDataManager* dataMgr);
+    TechTreeSystem(SDLManager& sdlManager, DataManagement::GameDataManager* dataMgr, 
+                   CraftingSystem* craftingSys = nullptr);
     
     /**
      * @brief Destructor
@@ -85,6 +92,12 @@ public:
      * @param rate Research points per second
      */
     void setResearchRate(int rate) { researchRate = rate; }
+    
+    /**
+     * @brief Set crafting system reference for recipe unlocking
+     * @param craftingSys Crafting system pointer
+     */
+    void setCraftingSystem(CraftingSystem* craftingSys) { craftingSystem = craftingSys; }
     
     /**
      * @brief Start researching technology
@@ -158,6 +171,13 @@ public:
      * @brief Reset tech tree to initial state
      */
     void resetTechTree();
+    
+    /**
+     * @brief Test method to trigger tech completion handling
+     * @param techId ID of technology to complete
+     * @note This method is for testing purposes only
+     */
+    void testTriggerTechCompletion(const std::string& techId);
 
 private:
     /**
@@ -176,6 +196,12 @@ private:
      * @param rewards Reward list
      */
     void applyTechRewards(const std::vector<TechReward>& rewards);
+    
+    /**
+     * @brief Unlock recipes related to completed technology
+     * @param techId ID of completed technology
+     */
+    void unlockTechRelatedRecipes(const std::string& techId);
     
     /**
      * @brief Check if resources are sufficient

@@ -22,9 +22,9 @@ struct Recipe {
     
     Recipe(const std::string& recipeId, const std::string& recipeName, 
            const std::string& desc, const std::vector<std::pair<Card, int>>& ing,
-           const Card& res, float success = 1.0f, int level = 0)
+           const Card& res, float success = 1.0f, int level = 0, bool unlocked = true)
         : id(recipeId), name(recipeName), description(desc), ingredients(ing),
-          result(res), successRate(success), unlockLevel(level), isUnlocked(true) {}
+          result(res), successRate(success), unlockLevel(level), isUnlocked(unlocked) {}
 };
 
 // Crafting result structure

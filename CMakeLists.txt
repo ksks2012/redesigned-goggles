@@ -152,3 +152,11 @@ target_link_libraries(TechTreeLayoutDemo SurviveLib UIFramework SDL2::SDL2 SDL2_
 # Add console demo
 add_executable(TechTreeConsoleDemo examples/tech_tree_console_demo.cpp)
 target_link_libraries(TechTreeConsoleDemo SurviveLib)
+
+# Add tech tree crafting integration test
+add_executable(TechTreeCraftingIntegrationTest examples/tech_tree_crafting_integration_test.cpp)
+target_link_libraries(TechTreeCraftingIntegrationTest SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+
+# Add simple integration test (avoids SimpleGameController dependencies)
+add_executable(SimpleIntegrationTest examples/simple_integration_test.cpp)
+target_link_libraries(SimpleIntegrationTest SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
