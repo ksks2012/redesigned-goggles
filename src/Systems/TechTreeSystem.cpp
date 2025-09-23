@@ -253,11 +253,11 @@ void TechTreeSystem::handleTechCompletion(const std::string& techId) {
     
     std::cout << "Tech completed: " << tech->name << std::endl;
     
-    // Apply rewards (including recipe unlocks)
+    // Apply rewards (including recipe unlocks) - this handles everything from JSON
     applyTechRewards(tech->rewards);
     
-    // Unlock related recipes based on tech ID
-    unlockTechRelatedRecipes(techId);
+    // Note: unlockTechRelatedRecipes is no longer needed as rewards are now 
+    // defined in JSON and handled by applyTechRewards
     
     // Trigger system callback
     if (onTechCompleted) {
@@ -504,50 +504,12 @@ bool TechTreeSystem::loadTechTreeFromJsonData(const nlohmann::json& jsonData) {
 }
 
 void TechTreeSystem::unlockTechRelatedRecipes(const std::string& techId) {
-    if (!craftingSystem) {
-        return;
-    }
+    // This function is deprecated and no longer needed.
+    // Recipe unlocking is now handled through JSON-defined rewards in applyTechRewards().
+    // All recipe rewards are defined in data/tech_tree.json under each technology's "rewards" array.
     
-    // Define tech-to-recipe mappings
-    // This maps completed technologies to recipes that should be unlocked
-    if (techId == "basic_survival") {
-        craftingSystem->unlockRecipe("basic_tools");
-        craftingSystem->unlockRecipe("simple_shelter");
-        std::cout << "Unlocked basic survival recipes" << std::endl;
-        
-    } else if (techId == "basic_crafting") {
-        craftingSystem->unlockRecipe("advanced_tools");
-        craftingSystem->unlockRecipe("wooden_weapons");
-        std::cout << "Unlocked basic crafting recipes" << std::endl;
-        
-    } else if (techId == "basic_farming") {
-        craftingSystem->unlockRecipe("farming_tools");
-        craftingSystem->unlockRecipe("food_processing");
-        std::cout << "Unlocked farming recipes" << std::endl;
-        
-    } else if (techId == "basic_building") {
-        craftingSystem->unlockRecipe("building_materials");
-        craftingSystem->unlockRecipe("construction_tools");
-        std::cout << "Unlocked construction recipes" << std::endl;
-        
-    } else if (techId == "advanced_crafting") {
-        craftingSystem->unlockRecipe("metal_tools");
-        craftingSystem->unlockRecipe("advanced_weapons");
-        std::cout << "Unlocked advanced crafting recipes" << std::endl;
-        
-    } else if (techId == "advanced_farming") {
-        craftingSystem->unlockRecipe("irrigation_systems");
-        craftingSystem->unlockRecipe("crop_enhancement");
-        std::cout << "Unlocked advanced farming recipes" << std::endl;
-        
-    } else if (techId == "military_tech") {
-        craftingSystem->unlockRecipe("combat_gear");
-        craftingSystem->unlockRecipe("defensive_structures");
-        std::cout << "Unlocked military technology recipes" << std::endl;
-        
-    } else if (techId == "tech_research") {
-        craftingSystem->unlockRecipe("research_equipment");
-        craftingSystem->unlockRecipe("knowledge_preservation");
-        std::cout << "Unlocked research technology recipes" << std::endl;
-    }
+    // Legacy function kept for backward compatibility but does nothing.
+    // TODO: Remove this function in future versions.
+    
+    std::cout << "Note: Recipe unlocking is now handled via JSON rewards configuration" << std::endl;
 }
