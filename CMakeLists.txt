@@ -49,6 +49,7 @@ set(SOURCES
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
     src/Systems/TechTreeSystem.cpp
+    src/Systems/GameDataValidator.cpp
     src/Interface/GameInputHandler.cpp
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
@@ -77,11 +78,13 @@ set(LIB_SOURCES
     src/Core/BaseManager.cpp
     src/Core/View.cpp
     src/Core/Card.cpp
+    src/Core/BaseBuildingController.cpp
     src/Systems/DataManager.cpp
     src/Systems/SaveManager.cpp
     src/Systems/ImGuiManager.cpp
     src/Systems/CraftingSystem.cpp
     src/Systems/TechTreeSystem.cpp
+    src/Systems/GameDataValidator.cpp
     src/Interface/GameInputHandler.cpp
     # UI components now handled by ui_framework, except game-specific ones
     src/Interface/ui/UIInventoryContainer.cpp
@@ -137,7 +140,20 @@ else()
     message(STATUS "To enable tests, ensure ${CMAKE_SOURCE_DIR}/lib/catch2/catch.hpp exists")
 endif()
 
-# Add examples
+# Tech Tree JSON Test
+add_executable(TechTreeJSONTest
+    examples/tech_tree_json_test.cpp
+)
+target_link_libraries(TechTreeJSONTest SurviveLib UIFramework ${SDL2_LIBRARIES} ${CMAKE_DL_LIBS})
+target_include_directories(TechTreeJSONTest PRIVATE include lib/nlohmann ${SDL2_INCLUDE_DIRS})
+
+# Game data validation tool
+add_executable(GameDataValidationTool
+    examples/game_data_validation_tool.cpp
+    src/Systems/GameDataValidator.cpp
+)
+target_link_libraries(GameDataValidationTool ${CMAKE_DL_LIBS})
+target_include_directories(GameDataValidationTool PRIVATE include lib/nlohmann)
 add_executable(TechTreeExample examples/tech_tree_example.cpp)
 target_link_libraries(TechTreeExample SurviveLib UIFramework SDL2::SDL2 SDL2_ttf::SDL2_ttf)
 

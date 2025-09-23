@@ -2,6 +2,7 @@
 #include "Interface/ui/TechTree.h"
 #include "Interface/ui/TechTreeUI.h"
 #include "Systems/DataManager.h"
+#include <nlohmann/json.hpp>
 #include <memory>
 #include <functional>
 
@@ -178,12 +179,26 @@ public:
      * @note This method is for testing purposes only
      */
     void testTriggerTechCompletion(const std::string& techId);
+    
+    /**
+     * @brief Load tech tree from JSON file
+     * @param filename Path to tech tree JSON file
+     * @return Whether loading was successful
+     */
+    bool loadTechTreeFromJson(const std::string& filename);
 
 private:
     /**
-     * @brief Initialize basic tech tree
+     * @brief Initialize basic tech tree (deprecated - use loadTechTreeFromJson)
      */
     void initializeBasicTechs();
+    
+    /**
+     * @brief Load tech tree from JSON data
+     * @param jsonData JSON data containing tech tree configuration
+     * @return Whether loading was successful
+     */
+    bool loadTechTreeFromJsonData(const nlohmann::json& jsonData);
     
     /**
      * @brief Handle technology completion

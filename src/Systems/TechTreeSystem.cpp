@@ -1,5 +1,6 @@
 #include "Systems/TechTreeSystem.h"
 #include "Systems/CraftingSystem.h"
+#include "nlohmann/json.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -14,8 +15,13 @@ bool TechTreeSystem::initialize() {
         return false;
     }
     
-    // Initialize basic technologies
-    initializeBasicTechs();
+    // Try to load from JSON file first
+    bool loadedFromJson = loadTechTreeFromJson("data/tech_tree.json");
+    if (!loadedFromJson) {
+        std::cout << "Failed to load tech tree from JSON, falling back to hardcoded initialization" << std::endl;
+        // Initialize basic technologies as fallback
+        initializeBasicTechs();
+    }
     
     // Set callback functions
     techTree->setOnTechCompleted([this](const std::string& techId) {
@@ -370,6 +376,131 @@ void TechTreeSystem::resetTechTree() {
 
 void TechTreeSystem::testTriggerTechCompletion(const std::string& techId) {
     handleTechCompletion(techId);
+}
+
+bool TechTreeSystem::loadTechTreeFromJson(const std::string& filename) {
+    try {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open tech tree file: " << filename << std::endl;
+            return false;
+        }
+        
+        nlohmann::json jsonData;
+        file >> jsonData;
+        file.close();
+        
+        return loadTechTreeFromJsonData(jsonData);
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading tech tree from JSON: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool TechTreeSystem::loadTechTreeFromJsonData(const nlohmann::json& jsonData) {
+    try {
+        if (!jsonData.contains("tech_tree") || !jsonData["tech_tree"].contains("technologies")) {
+            std::cerr << "Invalid tech tree JSON structure" << std::endl;
+            return false;
+        }
+        
+        const auto& techTree_json = jsonData["tech_tree"];
+        const auto& technologies = techTree_json["technologies"];
+        
+        if (!technologies.is_array()) {
+            std::cerr << "Technologies field must be an array" << std::endl;
+            return false;
+        }
+        
+        // Clear existing tech tree
+        techTree = std::make_unique<TechTree>();
+        
+        // First pass: Create all technologies
+        for (const auto& tech_json : technologies) {
+            if (!tech_json.contains("id") || !tech_json.contains("name") || 
+                !tech_json.contains("description") || !tech_json.contains("type") ||
+                !tech_json.contains("research_cost") || !tech_json.contains("position")) {
+                std::cerr << "Technology missing required fields" << std::endl;
+                continue;
+            }
+            
+            std::string id = tech_json["id"];
+            std::string name = tech_json["name"];
+            std::string description = tech_json["description"];
+            std::string type_str = tech_json["type"];
+            int research_cost = tech_json["research_cost"];
+            
+            // Parse position
+            const auto& position = tech_json["position"];
+            int x = position.contains("x") ? position["x"].get<int>() : 0;
+            int y = position.contains("y") ? position["y"].get<int>() : 0;
+            
+            // Convert type string to enum
+            TechType type = TechType::SURVIVAL;
+            if (type_str == "CRAFTING") type = TechType::CRAFTING;
+            else if (type_str == "AGRICULTURE") type = TechType::AGRICULTURE;
+            else if (type_str == "BUILDING") type = TechType::BUILDING;
+            else if (type_str == "MILITARY") type = TechType::MILITARY;
+            else if (type_str == "ADVANCED") type = TechType::ADVANCED;
+            
+            // Create technology node
+            auto techNode = std::make_shared<TechNode>(id, name, description, type, research_cost, x, y);
+            
+            // Set initial status
+            if (tech_json.contains("initial_status")) {
+                std::string status_str = tech_json["initial_status"];
+                if (status_str == "AVAILABLE") {
+                    techNode->status = TechStatus::AVAILABLE;
+                } else if (status_str == "RESEARCHING") {
+                    techNode->status = TechStatus::RESEARCHING;
+                } else if (status_str == "COMPLETED") {
+                    techNode->status = TechStatus::COMPLETED;
+                } else {
+                    techNode->status = TechStatus::LOCKED;
+                }
+            }
+            
+            // Add rewards
+            if (tech_json.contains("rewards") && tech_json["rewards"].is_array()) {
+                for (const auto& reward_json : tech_json["rewards"]) {
+                    if (reward_json.contains("type") && reward_json.contains("identifier")) {
+                        std::string reward_type = reward_json["type"];
+                        std::string identifier = reward_json["identifier"];
+                        int amount = reward_json.contains("amount") ? reward_json["amount"].get<int>() : 1;
+                        
+                        techNode->addReward(reward_type, identifier, amount);
+                    }
+                }
+            }
+            
+            // Add to tech tree
+            techTree->addTech(techNode);
+        }
+        
+        // Second pass: Set up prerequisites and unlocks
+        for (const auto& tech_json : technologies) {
+            std::string tech_id = tech_json["id"];
+            
+            // Set prerequisites
+            if (tech_json.contains("prerequisites") && tech_json["prerequisites"].is_array()) {
+                for (const auto& prereq_json : tech_json["prerequisites"]) {
+                    if (prereq_json.contains("tech_id")) {
+                        std::string prereq_tech_id = prereq_json["tech_id"];
+                        bool required = prereq_json.contains("required") ? prereq_json["required"].get<bool>() : true;
+                        
+                        techTree->setPrerequisite(tech_id, prereq_tech_id, required);
+                    }
+                }
+            }
+        }
+        
+        std::cout << "Successfully loaded tech tree from JSON with " << technologies.size() << " technologies" << std::endl;
+        return true;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error parsing tech tree JSON data: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void TechTreeSystem::unlockTechRelatedRecipes(const std::string& techId) {
