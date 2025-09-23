@@ -63,6 +63,11 @@ std::shared_ptr<TechTreeUI> TechTreeSystem::createUI(int x, int y, int width, in
 }
 
 void TechTreeSystem::update(float deltaTime) {
+    // Update UI animations (progress bars)
+    if (techTreeUI) {
+        techTreeUI->update(deltaTime);
+    }
+    
     if (currentResearchTech.empty()) {
         return;
     }

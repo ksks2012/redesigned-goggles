@@ -73,6 +73,31 @@ public:
         techTreeUI = techTreeSystem->createUI(50, 50, 700, 500);
         if (techTreeUI) {
             uiManager->addComponent(techTreeUI);
+            
+            // Set up callbacks
+            techTreeUI->onStartResearch = [this](const std::string& techId) -> bool {
+                std::cout << "Attempting to start research on: " << techId << std::endl;
+                if (techTreeSystem->startResearch(techId)) {
+                    std::cout << "✅ Started research on " << techId << std::endl;
+                    return true;
+                } else {
+                    std::cout << "❌ Failed to start research on " << techId << std::endl;
+                    return false;
+                }
+            };
+            
+            // Test mode: automatically give research points and start research
+            std::cout << "🧪 Test Mode: Adding research points and starting research automatically..." << std::endl;
+            techTreeSystem->setResearchPoints(500);  // Give sufficient research points
+            std::cout << "Research points set to: " << techTreeSystem->getResearchPoints() << std::endl;
+            
+            // Automatically start research on Basic Survival
+            if (techTreeSystem->startResearch("basic_survival")) {
+                std::cout << "✅ Auto-started research on Basic Survival" << std::endl;
+            } else {
+                std::cout << "❌ Failed to auto-start research" << std::endl;
+            }
+            
             std::cout << "✅ Tech Tree UI with UILabel nodes created successfully!" << std::endl;
             std::cout << "   - UILabel components created for each TechNode" << std::endl;
             std::cout << "   - Connection lines will be drawn between prerequisites" << std::endl;
@@ -98,6 +123,14 @@ public:
                     techTreeSystem->setResearchPoints(techTreeSystem->getResearchPoints() + 100);
                     std::cout << "Added 100 research points. Total: " 
                              << techTreeSystem->getResearchPoints() << std::endl;
+                    break;
+                case SDLK_RETURN:
+                    // Manually trigger research
+                    if (techTreeUI && techTreeUI->onStartResearch) {
+                        // Default to selecting the first available tech (Basic Survival)
+                        std::cout << "Attempting to start research on basic_survival..." << std::endl;
+                        techTreeUI->onStartResearch("basic_survival");
+                    }
                     break;
             }
         }
