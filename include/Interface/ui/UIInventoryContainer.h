@@ -1,5 +1,5 @@
 #pragma once
-#include "Interface/ui/UIContainer.h"
+#include "../../../extracted_libs/ui_framework/include/Interface/ui/ContainerCompat.h"
 #include "Core/Inventory.h"
 #include "Core/Card.h"
 #include <unordered_map>
@@ -11,9 +11,9 @@ class UICard;
 /**
  * Specialized container for inventory virtualization.
  * Only renders visible cards to optimize performance for large inventories.
- * Manages card instances pool and handles scroll-based visibility calculation.
+ * Uses SimpleContainer with composition for modern container functionality.
  */
-class UIInventoryContainer : public UIContainer {
+class UIInventoryContainer : public SimpleContainer {
 public:
     UIInventoryContainer(int x, int y, int width, int height, SDLManager& sdlManager);
     ~UIInventoryContainer() override = default;
@@ -42,8 +42,8 @@ public:
     void render() override;
     void handleEvent(const SDL_Event& event) override;
     
-    // Override getMaxScroll to work with inventory data instead of children
-    int getMaxScroll() const override;
+    // Override getMaxScroll to work with inventory data instead of children  
+    int getMaxScroll() const;
 
 private:
     // Current inventory data

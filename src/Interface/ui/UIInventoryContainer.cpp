@@ -5,7 +5,8 @@
 #include <algorithm>
 
 UIInventoryContainer::UIInventoryContainer(int x, int y, int width, int height, SDLManager& sdlManager)
-    : UIContainer(x, y, width, height, sdlManager) {
+    : SimpleContainer(x, y, width, height, sdlManager) {
+    setScrollable(true); // Enable scrolling for UIContainer compatibility
     // Pre-allocate some cards in the pool to avoid frequent allocations
     cardPool_.reserve(20);  // Reasonable default for most inventories
 }

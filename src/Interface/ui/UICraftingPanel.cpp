@@ -4,11 +4,12 @@
 // UIRecipeItem implementation
 UIRecipeItem::UIRecipeItem(const Recipe& recipe, int x, int y, SDLManager& sdlManager, 
                            std::function<void(const Recipe&)> onRecipeClick)
-    : UIContainer(x, y, Constants::CRAFT_PANEL_WIDTH - Constants::RECIPE_ITEM_MARGIN,
-                  Constants::RECIPE_ITEM_HEIGHT - Constants::RECIPE_ITEM_VERTICAL_SPACING, sdlManager),
+    : SimpleContainer(x, y, Constants::CRAFT_PANEL_WIDTH - Constants::RECIPE_ITEM_MARGIN,
+                      Constants::RECIPE_ITEM_HEIGHT - Constants::RECIPE_ITEM_VERTICAL_SPACING, sdlManager),
       recipe_(recipe),
       canCraft_(false),
       onRecipeClick_(onRecipeClick) {
+    setScrollable(true); // Enable scrolling for UIContainer compatibility
     createRecipeContent();
 }
 
@@ -86,11 +87,12 @@ void UIRecipeItem::renderIngredientsList(int x, int y) {
 // UICraftingPanel implementation
 UICraftingPanel::UICraftingPanel(SDLManager& sdlManager, 
                                  std::function<void(const Recipe&)> onRecipeClick)
-    : UIContainer(Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
-                  Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT, sdlManager),
+    : SimpleContainer(Constants::CRAFT_PANEL_X, Constants::CRAFT_PANEL_Y,
+                      Constants::CRAFT_PANEL_WIDTH, Constants::CRAFT_PANEL_HEIGHT, sdlManager),
       visible_(false),
       scrollOffset_(0),
       onRecipeClick_(onRecipeClick) {
+    setScrollable(true); // Enable scrolling for UIContainer compatibility
     createPanelContent();
 }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Interface/ui/UIContainer.h"
+#include "../../../extracted_libs/ui_framework/include/Interface/ui/ContainerCompat.h"
 #include "Systems/CraftingSystem.h"
 #include "Core/Inventory.h"
 #include <vector>
@@ -7,9 +7,9 @@
 
 /**
  * Recipe item component for displaying individual recipes
- * Inherits from UIContainer to support scroll management and layout management
+ * Uses SimpleContainer for composition-based container functionality
  */
-class UIRecipeItem : public UIContainer {
+class UIRecipeItem : public SimpleContainer {
 public:
     UIRecipeItem(const Recipe& recipe, int x, int y, SDLManager& sdlManager, 
                  std::function<void(const Recipe&)> onRecipeClick = nullptr);
@@ -32,9 +32,9 @@ private:
 
 /**
  * Crafting panel UI component
- * Inherits from UIContainer to support scroll management and layout management
+ * Uses SimpleContainer for composition-based container functionality with auto-layout
  */
-class UICraftingPanel : public UIContainer {
+class UICraftingPanel : public SimpleContainer {
 public:
     UICraftingPanel(SDLManager& sdlManager, 
                     std::function<void(const Recipe&)> onRecipeClick = nullptr);
@@ -48,9 +48,12 @@ public:
     void hide();
     bool isVisible() const { return visible_; }
     
-    // Scroll support (inherits from UIContainer but keeps custom implementation for compatibility)
-    void setScrollOffset(int scrollOffset) { scrollOffset_ = scrollOffset; }
-    int getScrollOffset() const { return scrollOffset_; }
+    // Scroll support (SimpleContainer provides built-in scrolling capabilities)
+    void setScrollOffset(int scrollOffset) { 
+        setScrollable(true);
+        SimpleContainer::setScrollOffset(scrollOffset); 
+    }
+    int getScrollOffset() const { return SimpleContainer::getScrollOffset(); }
     
     // Layout management for panel content
     void updatePanelLayout();
