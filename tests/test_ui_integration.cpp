@@ -13,7 +13,7 @@ public:
     TTF_Font* getFont() const { return nullptr; }
 };
 
-#include "Interface/ui/UIContainer.h"
+#include "Interface/ui/ContainerCompat.h"
 #include "Interface/ui/UIManager.h"
 #include "Interface/ui/UIComponent.h"
 #include "Interface/ui/UICard.h"
@@ -32,8 +32,9 @@ TEST_CASE("Integration: inventory scroll and tooltip show/hide simulation") {
     SDLManager dummy;
     UIManager mgr;
 
-    // Create inventory directly as shared_ptr
-    auto inventoryPtr = std::make_shared<UIContainer>(0,0,200,100,dummy);
+    // Create inventory using SimpleContainer for modern container functionality
+    auto inventoryPtr = std::make_shared<SimpleContainer>(0,0,200,100,dummy);
+    inventoryPtr->setScrollable(true); // Enable scrolling like UIContainer had by default
 
     // Add many cards
     for (int i=0;i<10;++i) {
